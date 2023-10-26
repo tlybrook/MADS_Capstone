@@ -5,47 +5,63 @@ import os
 import imagesize
 import pandas as pd
 import matplotlib.pyplot  as plt
+import numpy as np
+import tensorflow as tf
 
-#image = cv2.imread(f"{image_path}/{files[0]}")
-#cv2.imshow('color image', image)
-
-#cv2.waitKey(0) 
-  
-# closing all open windows 
-#cv2.destroyAllWindows()
-
-# print(im.format, im.size, im.mode)
-# im.show()
+root_folder = "./chest_scan_data/"
+split_folders = ["train", "test", "valid"]
+outcome_folders = ["/large.cell.carcinoma", "/normal", ]
+#"/squamous.cell.carcinoma" "/adenocarcinoma",
 
 #%%
-image_paths = ["./chest_scan_data/train/adenocarcinoma_left.lower.lobe_T2_N0_M0_Ib",
-               "./chest_scan_data/train/large.cell.carcinoma_left.hilum_T2_N2_M0_IIIa",
-               "./chest_scan_data/train/normal",
-               "./chest_scan_data/train/squamous.cell.carcinoma_left.hilum_T1_N2_M0_IIIa"]
+def img_preprocess(root_folder=root_folder, split_folders=split_folders, outcome_folders=outcome_folders):
+    data_list = []
+    for i in split_folders:
+        imgs = []
+        values = []
+        for j in outcome_folders:
+            folder_concat = root_folder + i + j
+            files = os.listdir(folder_concat)
+            for file in files:
+                im = Image.open(f"{folder_concat}/{file}")
+                image_array  = tf.convert_to_tensor(im, dtype=tf.float32)
+                imgs.append(image_array)
 
-image_dict = {}
-for i in image_paths:
-    files = os.listdir(i)
-    for file in files:
-        im = Image.open(f"{i}/{file}")
-        width, height = im.size
-        image_dict[str(file)] = (width, height)
+                if j != "/normal":
+                    values.append(0)
+                else:
+                    values.append(1)
+        data_list.append(pd.DataFrame({"images": imgs, "tumor": values}))
 
-widths = [v[0] for v in image_dict.values()]
-heights = [v[1] for v in image_dict.values()]
-filenames = image_dict.keys()
-
-image_dims = pd.DataFrame(data={'FileName': filenames, 'Width': widths, 'Height': heights})
-
-print(image_dims)
+    return data_list
 
 #%%
-fig = plt.figure(figsize=(8, 8))
-ax = fig.add_subplot(111)
-points = ax.scatter(image_dims.Width, image_dims.Height, color='blue', alpha=0.5, picker=True)
-ax.set_title("Image Dimensions")
-ax.set_xlabel("Width", size=14)
-ax.set_ylabel("Height", size=14)
+def determine_dim_resize(root_folder=root_folder, split_folders=split_folders, outcome_folders=outcome_folders):
+    image_dict = {}
+    for i in split_folders:
+        for j in outcome_folders:
+            folder_concat = root_folder + i + j
+            files = os.listdir(folder_concat)
+            for file in files:
+                im = Image.open(f"{folder_concat}/{file}")
+                width, height = im.size
+                image_dict[str(file)] = (width, height)
+
+    widths = [v[0] for v in image_dict.values()]
+    heights = [v[1] for v in image_dict.values()]
+    filenames = image_dict.keys()
+
+    image_dims = pd.DataFrame(data={'FileName': filenames, 'Width': widths, 'Height': heights})
+
+    #graph for determining image dimensions to resize
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_subplot(111)
+    points = ax.scatter(image_dims.Width, image_dims.Height, color='blue', alpha=0.5, picker=True)
+    ax.set_title("Image Dimensions")
+    ax.set_xlabel("Width", size=14)
+    ax.set_ylabel("Height", size=14)
+    return
+
 
 
 # %%
