@@ -45,7 +45,7 @@ def data_preparation(data_path, folder_labels):
                     index = next(i for i, e in enumerate(folder_labels) if k[:6] in e)
                     shutil.copyfile(f"{data_path}/{i}/{k}/{file}", f"./final_dataset/{folder_labels[index]}/file{str(count)}.jpg")
                     count += 1
-    
+            print(f"{count} images added from {i} {k}")
     print("Number of deleted duplicates: ", del_count)
     return
 
@@ -92,81 +92,60 @@ def split_data(data_dir):
 train_ds, val_ds, test_ds = split_data(data_dir)
 
 #%%
+#Let's normalize the data
+def normalize_data(ds):
+    normalization_layer = tf.keras.layers.Rescaling(1./255)
+    normalized_ds = ds.map(lambda x, y: (normalization_layer(x), y))
+    return normalized_ds
+
+train_ds = normalize_data(train_ds)
+val_ds = normalize_data(val_ds)
+test_ds = normalize_data(test_ds)
 
 #%%
-'''
-normalization_layer = layers.Rescaling(1./255)
-There are two ways to use this layer. You can apply it to the dataset by calling Dataset.map:
+#Data augmentation in the training set
+def data_augmentation(train_ds):
+    flip_layer = tf.keras.layers.RandomFlip("horizontal", input_shape=(256, 256, 1), seed=42)
+    rotation_layer = tf.keras.layers.RandomRotation(0.5, seed=42)
+    aug_train_ds = train_ds.map(lambda x, y: (flip_layer(x), y))
+    aug_train_ds = aug_train_ds.map(lambda i, k: (rotation_layer(i), k))
+    return aug_train_ds
 
-
-normalized_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
-image_batch, labels_batch = next(iter(normalized_ds))
-first_image = image_batch[0]
-# Notice the pixel values are now in `[0,1]`.
-print(np.min(first_image), np.max(first_image))
-
-#%%
-import pathlib
-data_dir = pathlib.Path('./final_dataset/')
-def split_data(data_dir):
-
-    batch_size = 32
-    image_resize = (256, 256)
-
-    ds = tf.keras.utils.image_dataset_from_directory(
-        data_dir,
-        label_mode="int",
-        color_mode="grayscale",
-        seed=42,
-        image_size=image_resize,
-        batch_size=batch_size)
-    
-    return ds
-''''''
-#from https://towardsdatascience.com/how-to-split-a-tensorflow-dataset-into-train-validation-and-test-sets-526c8dd29438
-def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, val_split=0.1, test_split=0.1, shuffle=True):
-    assert (train_split + test_split + val_split) == 1
-    
-    if shuffle:
-        # Specify seed to always have the same split distribution between runs
-        ds = ds.shuffle(seed=42)
-    
-    train_size = int(train_split * ds_size)
-    val_size = int(val_split * ds_size)
-    
-    train_ds = ds.take(train_size)    
-    val_ds = ds.skip(train_size).take(val_size)
-    test_ds = ds.skip(train_size).skip(val_size)
-    
-    return train_ds, val_ds, test_ds
-
-ds = split_data(data_dir)
-train_ds, val_ds, test_ds = get_dataset_partitions_tf(ds, len(ds))
+aug_train_ds = data_augmentation(train_ds)
+new_train_ds = train_ds.concatenate(aug_train_ds)
 
 #%%
-X_train = np.array(X_train)
-X_train = X_train.reshape(X_train.shape[0], -1) / 255
-y_train = np.array(y_train)
+def ds_to_array(ds):
+    imgs = []
+    labels = []
+    for image_batch, label_batch in new_train_ds:
+        labels.append(label_batch.numpy())
+        imgs.append(image_batch.numpy())
 
-X_test = np.array(X_test)
-X_test = X_test.reshape(X_test.shape[0], -1) / 255
-y_test = np.array(y_test)
+    images_array = np.concatenate(imgs, axis=0)
+    images_array = images_array.reshape(images_array.shape[0], -1)
 
-X_valid = np.array(X_valid)
-X_valid = X_valid.reshape(X_valid.shape[0], -1) / 255
-y_valid = np.array(y_valid)
+    labels_array = np.concatenate(labels, axis=0)
+    return images_array, labels_array
 
-clf = LogisticRegression(random_state=0, max_iter=150).fit(X_train, y_train)
+X_train, y_train = ds_to_array(new_train_ds)
+X_test, y_test = ds_to_array(test_ds)
+
+#%%
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import recall_score
+
+#Run logistic regression
+clf = LogisticRegression(random_state=42, class_weight='balanced', max_iter=1000).fit(X_train, y_train)
 preds = clf.predict(X_test)
 score = clf.score(X_test, y_test)
-recall = recall_score(y_test, preds)
+recall = recall_score(y_test, preds, average='macro')
 
 print(score)
 print(recall)
 
-
-
 #%%
+#note need to come back and rework a little bit
 def determine_dim_resize(root_folder=root_folder, split_folders=split_folders, outcome_folders=outcome_folders):
     image_dict = {}
     for i in split_folders:
@@ -194,4 +173,3 @@ def determine_dim_resize(root_folder=root_folder, split_folders=split_folders, o
     return
 
 # %%
-'''
