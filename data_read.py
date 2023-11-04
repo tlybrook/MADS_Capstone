@@ -25,13 +25,13 @@ def data_preparation(data_path, folder_labels):
         return
     
     imgs = []
-    count = 0
     del_count = 0
-    top_level_folders = os.listdir(data_path)
+    top_level_folders = sorted(os.listdir(data_path))
     for i in top_level_folders:
-        folders = os.listdir(f"{data_path}/{i}")
+        folders = sorted(os.listdir(f"{data_path}/{i}"))
         for k in folders:
-            files = os.listdir(f"{data_path}/{i}/{k}")
+            count = 0
+            files = sorted(os.listdir(f"{data_path}/{i}/{k}"))
             for file in files:
                 im = Image.open(f"{data_path}/{i}/{k}/{file}")
                 new_image = im.resize((512, 512))
