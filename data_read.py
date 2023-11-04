@@ -24,7 +24,9 @@ def data_preparation(data_path, folder_labels):
         print("Oops! Please make sure to delete folders and try running again!")
         return
     
-    imgs = []
+    imgs = {}
+    for i in folder_labels:
+        imgs[i] = []
     del_count = 0
     top_level_folders = sorted(os.listdir(data_path))
     for i in top_level_folders:
@@ -39,10 +41,10 @@ def data_preparation(data_path, folder_labels):
 
                 if len(imgs) != 0 and np.any(np.all(image_array == imgs, axis=1)):
                     del_count += 1
-                else:
-                    imgs.append(image_array)
-                    
+                else:                    
                     index = next(i for i, e in enumerate(folder_labels) if k[:6] in e)
+                    imgs[folder_labels[index]].append(image_array)
+
                     shutil.copyfile(f"{data_path}/{i}/{k}/{file}", f"./final_dataset/{folder_labels[index]}/file{str(count)}.jpg")
                     count += 1
             print(f"{count} images added from {i} {k}")
