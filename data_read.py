@@ -24,9 +24,8 @@ def data_preparation(data_path, folder_labels):
         print("Oops! Please make sure to delete folders and try running again!")
         return
     
-    imgs = {}
-    for i in folder_labels:
-        imgs[i] = []
+    imgs_dict = {}
+    imgs = []
     del_count = 0
     top_level_folders = sorted(os.listdir(data_path))
     for i in top_level_folders:
@@ -38,12 +37,16 @@ def data_preparation(data_path, folder_labels):
                 im = Image.open(f"{data_path}/{i}/{k}/{file}")
                 new_image = im.resize((512, 512))
                 image_array  = np.asarray(ImageOps.grayscale(new_image)).astype('float32')
+                index = next(i for i, e in enumerate(folder_labels) if k[:6] in e)
 
                 if len(imgs) != 0 and np.any(np.all(image_array == imgs, axis=1)):
                     del_count += 1
+                    print(folder_labels[index])
+                    print(file)
+                    print(imgs_dict[image_array])
                 else:                    
-                    index = next(i for i, e in enumerate(folder_labels) if k[:6] in e)
-                    imgs[folder_labels[index]].append(image_array)
+                    imgs.append(image_array)
+                    imgs_dict[image_array] = (file, folder_labels[index])
 
                     shutil.copyfile(f"{data_path}/{i}/{k}/{file}", f"./final_dataset/{folder_labels[index]}/file{str(count)}.jpg")
                     count += 1
@@ -53,6 +56,53 @@ def data_preparation(data_path, folder_labels):
 
 data_preparation(data_paths, folder_labels)
 
+
+#%%
+data_path = "./Data"
+folder_labels = ["adenocarcinoma", 'large.cell.carcinoma', 'normal', 'squamous.cell.carcinoma']
+#This function is to take in the dataset from Kaggle, removes duplicates, and
+# moves them into new folders to be ready for data spliting and preprocessing.
+#def data_preparation(data_path, folder_labels):
+    
+imgs_dict = {}
+del_count = 0
+counter = 0
+img = []
+top_level_folders = sorted(os.listdir(data_path))
+for i in top_level_folders:
+    folders = sorted(os.listdir(f"{data_path}/{i}"))
+    for k in folders:
+        files = sorted(os.listdir(f"{data_path}/{i}/{k}"))
+        #print(len(files))
+        #print(k)
+        for file in files:
+            img.append(file)
+            im = Image.open(f"{data_path}/{i}/{k}/{file}")
+            new_image = im.resize((512, 512))
+            image_array  = np.asarray(ImageOps.grayscale(new_image)).astype('float32')
+            index = next(i for i, e in enumerate(folder_labels) if k[:6] in e)
+
+            imgs_dict[counter] = (image_array, folder_labels[index], file)
+            counter+=1
+print(len(imgs_dict))
+print(len(img))
+
+#%%
+new_imgs = []
+for i in imgs_dict:
+    if len(new_imgs) != 0:
+        for j in new_imgs:
+            if imgs_dict[i][0] == imgs_dict[j][0]:
+                print('comparer', imgs_dict[j][1], imgs_dict[j][2])
+                print('new', imgs_dict[i][1], imgs_dict[i][2])
+            else:
+                new_imgs.append(i)
+    else:
+        new_imgs.append(i)
+
+    #return
+
+#data_preparation(data_path, folder_labels)
 #%%
 import pathlib
 from sklearn.model_selection import train_test_split
