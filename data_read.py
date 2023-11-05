@@ -15,6 +15,15 @@ folder_labels = ["adenocarcinoma", 'large.cell.carcinoma', 'normal', 'squamous.c
 # moves them into new folders to be ready for data spliting and preprocessing.
 def data_preparation(data_path, folder_labels):
     #creating new directory to put files
+    doop1_path = f"{data_path}/train/large.cell.carcinoma_left.hilum_T2_N2_M0_llla/14.png"
+    doop2_path = f"{data_path}/train/squamous.cell.carcinoma_left.hilum_T1_N2_M0_llla/sq2.png"
+
+    if os.path.exists(doop1_path):
+        os.remove(doop1_path)
+    
+    if os.path.exists(doop2_path):
+        os.remove(doop2_path)
+
     try:
         for i in folder_labels:
             os.makedirs(f"./final_dataset/{i}")
@@ -26,6 +35,7 @@ def data_preparation(data_path, folder_labels):
     
     imgs_dict = {}
     imgs = []
+    imgs_w_doops = []
     del_count = 0
     top_level_folders = sorted(os.listdir(data_path))
     for i in top_level_folders:
@@ -38,6 +48,7 @@ def data_preparation(data_path, folder_labels):
                 new_image = im.resize((512, 512))
                 image_array  = np.asarray(ImageOps.grayscale(new_image)).astype('float32')
                 index = next(i for i, e in enumerate(folder_labels) if k[:6] in e)
+                imgs_w_doops.append(image_array)
 
                 if len(imgs) != 0 and np.any(np.all(image_array == imgs, axis=1)):
                     del_count += 1
@@ -65,44 +76,79 @@ folder_labels = ["adenocarcinoma", 'large.cell.carcinoma', 'normal', 'squamous.c
 #def data_preparation(data_path, folder_labels):
     
 imgs_dict = {}
-del_count = 0
 counter = 0
-img = []
+imgs = []
+img_w_doop = []
 top_level_folders = sorted(os.listdir(data_path))
 for i in top_level_folders:
     folders = sorted(os.listdir(f"{data_path}/{i}"))
     for k in folders:
+        count = 0
         files = sorted(os.listdir(f"{data_path}/{i}/{k}"))
-        #print(len(files))
-        #print(k)
         for file in files:
-            img.append(file)
+            img_w_doop.append(file)
             im = Image.open(f"{data_path}/{i}/{k}/{file}")
             new_image = im.resize((512, 512))
             image_array  = np.asarray(ImageOps.grayscale(new_image)).astype('float32')
             index = next(i for i, e in enumerate(folder_labels) if k[:6] in e)
 
-            imgs_dict[counter] = (image_array, folder_labels[index], file)
-            counter+=1
+            imgs_dict[counter] = (image_array, folder_labels[index], k, i, file)
+            counter += 1
+
+information = {}
+for key, info in imgs_dict.items():
+    if len(imgs) == 0:
+        imgs.append(info[0])
+    else:
+        check_frame = pd.DataFrame(np.all(info[0] == imgs, axis=1))
+        matches = check_frame.sum(axis=1)
+        matches2 = matches.loc[lambda x: x > 200]
+        if matches2.empty:
+            imgs.append(info[0])
+            continue
+        else:
+            information[key] = matches.loc[lambda x: x > 200]
+
+            # if len(imgs) != 0 and np.any(np.all(image_array == imgs, axis=1)):
+            #     del_count += 1
+            #     print(folder_labels[index])
+            #     print(file)
+            #     print(imgs_dict[image_array])
+            # else:                    
+            #     imgs.append(image_array)
+            #     imgs_dict[image_array] = (file, folder_labels[index])
+
+            #     shutil.copyfile(f"{data_path}/{i}/{k}/{file}", f"./final_dataset/{folder_labels[index]}/file{str(count)}.jpg")
 print(len(imgs_dict))
-print(len(img))
+# print(len(img))
 
 #%%
-new_imgs = []
-for i in imgs_dict:
-    if len(new_imgs) != 0:
-        for j in new_imgs:
-            if imgs_dict[i][0] == imgs_dict[j][0]:
-                print('comparer', imgs_dict[j][1], imgs_dict[j][2])
-                print('new', imgs_dict[i][1], imgs_dict[i][2])
-            else:
-                new_imgs.append(i)
+doops = {}
+imgs = []
+for key, info in imgs_dict.items():
+    if len(imgs) == 0:
+        imgs.append(info[0])
     else:
-        new_imgs.append(i)
+        check_frame = pd.DataFrame(np.all(info[0] == imgs, axis=1))
+        matches = check_frame.sum(axis=1)
+        matches2 = matches.loc[lambda x: x > 200]
+        if matches2.empty:
+            imgs.append(info[0])
+            continue
+        else:
+            doops[key] = matches.loc[lambda x: x > 200]
+            
+final_non_doops = {}
+for key, info in imgs_dict.items():
+    if key not in doops:
+        final_non_doops[key] = info
 
-    #return
+count = 0
+for key, info in final_non_doops.items():
+    shutil.copyfile(f"{data_path}/{info[3]}/{info[2]}/{info[4]}", f"./final_dataset/{info[1]}/file{str(count)}.jpg")
+    count += 1
 
-#data_preparation(data_path, folder_labels)
+
 #%%
 import pathlib
 from sklearn.model_selection import train_test_split
