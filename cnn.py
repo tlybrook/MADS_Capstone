@@ -124,19 +124,28 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping
 
 # checkpoint = ModelCheckpoint("vgg16_1.h5", monitor='val_acc', verbose=1, save_best_only=True, save_weights_only=False, mode='auto')
 #early = EarlyStopping(monitor='val_accuracy', min_delta=0, patience=20, verbose=1, mode='auto')
-results = model.fit(
-    train_ds, 
-    validation_data= val_ds, 
-    validation_steps=10,
-    epochs=5,
-    steps_per_epoch = 1300 // 32
-    #callbacks=[early],
-)
-history = model.fit(train_ds.repeat(),
-                    steps_per_epoch=int(811/32),
-                    epochs=25,
+#results = model.fit(
+#    train_ds, 
+#    validation_data= val_ds, 
+#    validation_steps=10,
+#    epochs=5,
+#    steps_per_epoch = 1300 // 32
+#    #callbacks=[early],
+#)
+
+total_train = 0 
+for image_batch, y_batch in train_ds:
+    total_train += len(y_batch)
+total_val = 0
+for image_batch, y_batch in val_ds:
+    total_val += len(y_batch)
+total_val = total_val / 2
+
+results = model.fit(train_ds.repeat(),
+                    steps_per_epoch=int(total_train/32),
+                    epochs=5,
                     validation_data=val_ds.repeat(),
-                    validation_steps=int(81/32))
+                    validation_steps=int(total_val/32))
 
 #%%
 plt.plot(results.history['loss'], label='train loss')
