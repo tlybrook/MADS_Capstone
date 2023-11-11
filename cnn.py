@@ -1,7 +1,7 @@
 """
 Script to build CNN model in Keras
 """
-
+#%%
 # Import packages
 from PIL import Image, ImageOps
 import os
@@ -9,6 +9,7 @@ import shutil
 import pandas as pd
 import matplotlib.pyplot  as plt
 import numpy as np
+import keras_metrics
 import tensorflow as tf
 from keras.layers import (
     Conv2D,
@@ -17,7 +18,8 @@ from keras.layers import (
     MaxPooling2D,
     Flatten,
     BatchNormalization,
-    Dropout
+    Dropout, 
+    InputLayer
 )
 
 from keras.models import Sequential
@@ -41,22 +43,22 @@ def split_data(data_dir):
     train_ds = tf.keras.utils.image_dataset_from_directory(
         data_dir,
         validation_split=0.2,
-        label_mode="int",
+        labels="inferred",
+        label_mode='categorical',
         color_mode="grayscale",
         subset="training",
         seed=42,
-        image_size=image_resize,
-        batch_size=batch_size)
+        image_size=image_resize)
 
     val_ds = tf.keras.utils.image_dataset_from_directory(
         data_dir,
         validation_split=0.2,
-        label_mode="int",
+        labels="inferred",
+        label_mode='categorical',
         color_mode="grayscale",
         subset="validation",
         seed=42,
-        image_size=image_resize,
-        batch_size=batch_size)
+        image_size=image_resize)
 
     subset_size = int(0.5 * len(val_ds))
 
@@ -81,7 +83,7 @@ test_ds = normalize_data(test_ds)
 
 # print(len(train_ds.class_labels), len(val_ds), len(test_ds))
 
-
+#%%
 #Data augmentation in the training set
 def data_augmentation(train_ds):
     flip_layer = tf.keras.layers.RandomFlip("horizontal", input_shape=(256, 256, 1), seed=42)
@@ -94,40 +96,54 @@ aug_train_ds = data_augmentation(train_ds)
 new_train_ds = train_ds.concatenate(aug_train_ds)
 
 # Define input shape and num classes
-input_shape = (256, 256, 3)
 num_classes = 4
 
-
-# Create CNN using  adjusted VGG16 model framework
+#%%
 model = Sequential()
-model.add(Conv2D(input_shape=(256,256,1),filters=64,kernel_size=(3,3),padding="same", activation="relu"))
-model.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
+
+model.add(Conv2D(input_shape=(256,256,1),filters=64, kernel_size=(3,3),padding="same", activation="relu"))
+model.add(MaxPool2D(pool_size=2))
+
 
 # Pass data to dense layers
 # Good idea to have fully connected layers at the end after flattening
 model.add(Flatten())
 model.add(Dense(units=512,activation="relu"))
-model.add(Dense(units=1, activation="softmax"))
+model.add(Dense(units=4, activation="softmax"))
 
-opt = Adam(lr=0.001)
+opt = Adam(learning_rate=0.001)
 model.compile(
     optimizer=opt, 
     loss=categorical_crossentropy, 
-    metrics=['accuracy']
+    metrics=['accuracy', tf.keras.metrics.Recall()]
 )
 model.summary()
 
 
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.callbacks import ModelCheckpoint, EarlyStopping                                                                 
+
 # checkpoint = ModelCheckpoint("vgg16_1.h5", monitor='val_acc', verbose=1, save_best_only=True, save_weights_only=False, mode='auto')
-early = EarlyStopping(monitor='val_accuracy', min_delta=0, patience=20, verbose=1, mode='auto')
+#early = EarlyStopping(monitor='val_accuracy', min_delta=0, patience=20, verbose=1, mode='auto')
 results = model.fit(
-    new_train_ds, 
+    train_ds, 
     validation_data= val_ds, 
-    steps_per_epoch=5, 
     validation_steps=10,
-    epochs=10,
-    callbacks=[early]
+    epochs=5,
+    steps_per_epoch = 1300 // 32
+    #callbacks=[early],
 )
+history = model.fit(train_ds.repeat(),
+                    steps_per_epoch=int(811/32),
+                    epochs=25,
+                    validation_data=val_ds.repeat(),
+                    validation_steps=int(81/32))
+
+#%%
+plt.plot(results.history['loss'], label='train loss')
+plt.plot(results.history['val_loss'], label='val loss')
+plt.legend()
+plt.show()
+plt.savefig('LossVal_loss')
 
 
+# %%
