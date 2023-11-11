@@ -48,6 +48,7 @@ def split_data(data_dir):
         color_mode="grayscale",
         subset="training",
         seed=42,
+        batch_size=batch_size,
         image_size=image_resize)
 
     val_ds = tf.keras.utils.image_dataset_from_directory(
@@ -58,6 +59,7 @@ def split_data(data_dir):
         color_mode="grayscale",
         subset="validation",
         seed=42,
+        batch_size=batch_size,
         image_size=image_resize)
 
     subset_size = int(0.5 * len(val_ds))
@@ -141,7 +143,7 @@ for image_batch, y_batch in val_ds:
     total_val += len(y_batch)
 total_val = total_val / 2
 
-results = model.fit(train_ds.repeat(),
+results = model.fit(new_train_ds.repeat(),
                     steps_per_epoch=int(total_train/32),
                     epochs=5,
                     validation_data=val_ds.repeat(),
@@ -150,9 +152,20 @@ results = model.fit(train_ds.repeat(),
 #%%
 plt.plot(results.history['loss'], label='train loss')
 plt.plot(results.history['val_loss'], label='val loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.title('model accuracy')
 plt.legend()
 plt.show()
 plt.savefig('LossVal_loss')
 
+plt.plot(results.history['accuracy'], label='train accuracy')
+plt.plot(results.history['val_accuracy'], label='val accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.title('model loss')
+plt.legend()
+plt.show()
+plt.savefig('LossVal_loss')
 
 # %%
