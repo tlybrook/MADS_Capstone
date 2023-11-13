@@ -4,6 +4,7 @@ Script to build CNN model in Keras
 #%%
 # Import packages
 from PIL import Image, ImageOps
+import dill as pickle
 import os
 import shutil
 import pandas as pd
@@ -22,7 +23,7 @@ from keras.layers import (
     InputLayer
 )
 
-from keras.models import Sequential
+from keras.models import Sequential, load_model, save_model
 from keras.losses import categorical_crossentropy
 from keras.applications import VGG16
 from keras.preprocessing.image import ImageDataGenerator
@@ -101,16 +102,24 @@ new_train_ds = train_ds.concatenate(aug_train_ds)
 num_classes = 4
 
 #%%
+if 'model_tracker.pickle' not in os.listdir():
+    model_output = {}
+else:
+    with open('model_tracker.pickle', 'rb') as handle:
+        model_output = pickle.load(handle)
+
 model = Sequential()
 
-model.add(Conv2D(input_shape=(256,256,1),filters=64, kernel_size=(3,3),padding="same", activation="relu"))
+model.add(Conv2D(input_shape=(256,256,1),filters=32, kernel_size=(3,3),padding="same", activation="relu"))
 model.add(MaxPool2D(pool_size=2))
-
+model.add(Conv2D(filters=64, kernel_size=(3,3), padding="same", activation="relu"))
+model.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
 
 # Pass data to dense layers
 # Good idea to have fully connected layers at the end after flattening
 model.add(Flatten())
 model.add(Dense(units=512,activation="relu"))
+# model.add(Dropout(0.2))
 model.add(Dense(units=4, activation="softmax"))
 
 opt = Adam(learning_rate=0.001)
@@ -122,21 +131,15 @@ model.compile(
 model.summary()
 
 
+
 from keras.callbacks import ModelCheckpoint, EarlyStopping                                                                 
 
 # checkpoint = ModelCheckpoint("vgg16_1.h5", monitor='val_acc', verbose=1, save_best_only=True, save_weights_only=False, mode='auto')
-#early = EarlyStopping(monitor='val_accuracy', min_delta=0, patience=20, verbose=1, mode='auto')
-#results = model.fit(
-#    train_ds, 
-#    validation_data= val_ds, 
-#    validation_steps=10,
-#    epochs=5,
-#    steps_per_epoch = 1300 // 32
-#    #callbacks=[early],
-#)
+early = EarlyStopping(monitor='val_accuracy', min_delta=0.01, patience=3, verbose=1, mode='auto')
+
 
 total_train = 0 
-for image_batch, y_batch in train_ds:
+for image_batch, y_batch in new_train_ds:
     total_train += len(y_batch)
 total_val = 0
 for image_batch, y_batch in val_ds:
@@ -145,27 +148,56 @@ total_val = total_val / 2
 
 results = model.fit(new_train_ds.repeat(),
                     steps_per_epoch=int(total_train/32),
-                    epochs=5,
+                    epochs=10,
                     validation_data=val_ds.repeat(),
-                    validation_steps=int(total_val/32))
+                    validation_steps=int(total_val/32)
+                    # callbacks=[early]
+                    )
+
+
+def get_key(model_output: dict):
+    if len(model_output.keys()) > 0:
+        key = max(list(model_output.keys())) + 1
+    else:
+        key = 0
+    return key
+key = get_key(model_output=model_output)
+model.save(f'./model_objects/model_{key}.keras')
+model_output[key] = []
+model_output[key].append(f'./model_objects/model_{key}.keras')
+model_output[key].append(results.history)
+
+# model = load_model(f'./model_objects/model_{key}.keras')
+
+with open('model_tracker.pickle', 'wb') as handle:
+    pickle.dump(model_output, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 #%%
 plt.plot(results.history['loss'], label='train loss')
 plt.plot(results.history['val_loss'], label='val loss')
 plt.ylabel('loss')
 plt.xlabel('epoch')
-plt.title('model accuracy')
+plt.title('model Loss')
 plt.legend()
 plt.show()
-plt.savefig('LossVal_loss')
+plt.savefig('Val_loss')
 
 plt.plot(results.history['accuracy'], label='train accuracy')
 plt.plot(results.history['val_accuracy'], label='val accuracy')
 plt.ylabel('accuracy')
 plt.xlabel('epoch')
-plt.title('model loss')
+plt.title('model accuracy')
 plt.legend()
 plt.show()
-plt.savefig('LossVal_loss')
+plt.savefig('Val_acc')
+
+plt.plot(results.history['recall'], label='train recall')
+plt.plot(results.history['val_recall'], label='val recall')
+plt.ylabel('recall')
+plt.xlabel('epoch')
+plt.title('model recall')
+plt.legend()
+plt.show()
+plt.savefig('Val_recall')
 
 # %%

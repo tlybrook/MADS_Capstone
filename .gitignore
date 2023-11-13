@@ -1,8 +1,8 @@
 venv/
+Data/
 *.png
 *.jpg
 
 *.DS_Store
 *.csv
 
-lung_cancer_data/The IQ-OTHNCCD lung cancer dataset/The IQ-OTHNCCD lung cancer dataset/IQ-OTH_NCCD lung cancer dataset.txt
