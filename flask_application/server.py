@@ -15,7 +15,7 @@ import json
 app = Flask(__name__)
 upload_folder = os.path.join('static', 'uploads')
 app.config['UPLOAD_FOLDER'] = upload_folder
-model_path = './static/model_from_s3.keras'
+model_path = './static/model_test2.h5'
 
 loaded_model = load_model(model_path)
 
@@ -46,6 +46,10 @@ def upload_file():
     if request.method == 'POST':
         file = request.files['file']
         if file:
+            isExist = os.path.exists(upload_folder)
+            if not isExist:
+                # Create a new directory because it does not exist
+                os.makedirs(upload_folder)
             filename = f"{app.config['UPLOAD_FOLDER']}/file1.jpg"
             file.save(filename)
             processed_image = preprocess_image(filename)
