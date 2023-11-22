@@ -71,10 +71,8 @@ data_preparation(data_paths, folder_labels)
 #%%
 data_path = "./Data"
 folder_labels = ["adenocarcinoma", 'large.cell.carcinoma', 'normal', 'squamous.cell.carcinoma']
-#This function is to take in the dataset from Kaggle, removes duplicates, and
-# moves them into new folders to be ready for data spliting and preprocessing.
-#def data_preparation(data_path, folder_labels):
-    
+
+# Main code starts here
 imgs_dict = {}
 counter = 0
 imgs = []
@@ -95,34 +93,9 @@ for i in top_level_folders:
             imgs_dict[counter] = (image_array, folder_labels[index], k, i, file)
             counter += 1
 
-information = {}
-for key, info in imgs_dict.items():
-    if len(imgs) == 0:
-        imgs.append(info[0])
-    else:
-        check_frame = pd.DataFrame(np.all(info[0] == imgs, axis=1))
-        matches = check_frame.sum(axis=1)
-        matches2 = matches.loc[lambda x: x > 200]
-        if matches2.empty:
-            imgs.append(info[0])
-            continue
-        else:
-            information[key] = matches.loc[lambda x: x > 200]
-
-            # if len(imgs) != 0 and np.any(np.all(image_array == imgs, axis=1)):
-            #     del_count += 1
-            #     print(folder_labels[index])
-            #     print(file)
-            #     print(imgs_dict[image_array])
-            # else:                    
-            #     imgs.append(image_array)
-            #     imgs_dict[image_array] = (file, folder_labels[index])
-
-            #     shutil.copyfile(f"{data_path}/{i}/{k}/{file}", f"./final_dataset/{folder_labels[index]}/file{str(count)}.jpg")
-print(len(imgs_dict))
-# print(len(img))
 
 #%%
+# Continue code above
 doops = {}
 imgs = []
 for key, info in imgs_dict.items():
@@ -131,18 +104,30 @@ for key, info in imgs_dict.items():
     else:
         check_frame = pd.DataFrame(np.all(info[0] == imgs, axis=1))
         matches = check_frame.sum(axis=1)
-        matches2 = matches.loc[lambda x: x > 200]
+        matches2 = matches.loc[lambda x: x > 250]
         if matches2.empty:
             imgs.append(info[0])
             continue
         else:
-            doops[key] = matches.loc[lambda x: x > 200]
-            
+            doops[key] = matches.loc[lambda x: x > 250]
+            for i in matches2.index:
+                if imgs_dict[i][1] != imgs_dict[key][1]:
+                    print(key)
+                    print(matches2)
+                    print(imgs_dict[i][1])
+                    print(imgs_dict[key][1])
+
+#%%
+# write out the non dups
 final_non_doops = {}
+dup_keys = []
 for key, info in imgs_dict.items():
     if key not in doops:
         final_non_doops[key] = info
+    else:
+        dup_keys.append(key)
 
+#%%
 count = 0
 for key, info in final_non_doops.items():
     shutil.copyfile(f"{data_path}/{info[3]}/{info[2]}/{info[4]}", f"./final_dataset/{info[1]}/file{str(count)}.jpg")
@@ -200,6 +185,9 @@ train_ds = normalize_data(train_ds)
 val_ds = normalize_data(val_ds)
 test_ds = normalize_data(test_ds)
 
+# print(len(train_ds.class_labels), len(val_ds), len(test_ds))
+
+
 #%%
 #Data augmentation in the training set
 def data_augmentation(train_ds):
@@ -244,6 +232,7 @@ print(recall)
 
 #%%
 #note need to come back and rework a little bit
+root_folder = "./Data"
 def determine_dim_resize(root_folder=root_folder, split_folders=split_folders, outcome_folders=outcome_folders):
     image_dict = {}
     for i in split_folders:
