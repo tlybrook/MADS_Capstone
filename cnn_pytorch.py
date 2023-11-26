@@ -53,36 +53,39 @@ for i in os.listdir(data_dir):
 
 class_weights = compute_class_weight('balanced', classes=np.unique(y), y=y)
 
-class_weight = torch.tensor(class_weights)
+class_weight = torch.tensor(class_weights, dtype=torch.float32)
 
 # %%
 num_epochs = 50
 learning_rate = 0.001
 
 # CNN model definition
-class SimpleCNN(nn.Module):
+class CNN(nn.Module):
     def __init__(self):
-        super(SimpleCNN, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=5)
-        self.relu = nn.ReLU()
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=5)
-        self.fc1 = nn.Linear(32 * 5 * 5, 120)
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
+        super(CNN, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, padding=1)
+        self.pool1 = nn.MaxPool2d(kernel_size=2)
+        self.fc1 = nn.Linear(32 * 128 * 128, 2048)
+        self.dropout = nn.Dropout(0.2)
+        self.fc2 = nn.Linear(2048, 4)  # Output layer for 4 classes
+
+
+        #self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
+        #self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+        #self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
+        #self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2)
 
     def forward(self, x):
-        x = self.pool(self.relu(self.conv1(x)))
-        x = self.pool(self.relu(self.conv2(x)))
-        x = x.view(-1, 32 * 5 * 5)
-        x = self.relu(self.fc1(x))
-        x = self.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = self.pool1(nn.functional.relu(self.conv1(x)))
+        x = x.view(-1, 32 * 128 * 128)
+        x = nn.functional.relu(self.fc1(x))
+        x = self.dropout(x)
+        x = self.fc2(x)
         return x
 
 # Initialize model, loss function, and optimizer
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = SimpleCNN().to(device)
+model = CNN().to(device)
 criterion = nn.CrossEntropyLoss(weight=class_weight)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -104,6 +107,8 @@ for epoch in range(num_epochs):
 
         optimizer.zero_grad()
         outputs = model(images)
+        print(type(outputs))
+        print(type(labels))
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
