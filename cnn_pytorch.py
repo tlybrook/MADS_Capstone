@@ -107,8 +107,6 @@ for epoch in range(num_epochs):
 
         optimizer.zero_grad()
         outputs = model(images)
-        print(type(outputs))
-        print(type(labels))
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
@@ -128,7 +126,7 @@ for epoch in range(num_epochs):
     val_loss = 0.0
 
     with torch.no_grad():
-        for images, labels in test_loader:
+        for images, labels in val_loader:
             images, labels = images.to(device), labels.to(device)
             outputs = model(images)
             loss = criterion(outputs, labels)
@@ -142,7 +140,7 @@ for epoch in range(num_epochs):
     val_accuracy = 100 * correct_val / total_val
 
     # Calculate average validation loss
-    avg_val_loss = val_loss / len(test_loader)
+    avg_val_loss = val_loss / len(val_loader)
 
     # Early stopping
     if avg_val_loss < best_val_loss:
