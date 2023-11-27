@@ -1,26 +1,27 @@
 #%%
 import torch
 from torchvision import datasets, transforms
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, random_split, Dataset, TensorDataset
 from sklearn.utils.class_weight import compute_class_weight
 import os
 import numpy as np
 import torch.nn as nn
 import torch.optim as optim
+from torch.utils.data.dataset import ConcatDataset
 
 #%%
 data_dir = './final_dataset'  
-
 image_size = (256, 256)
-# Define transformations for image data
-transform = transforms.Compose([
+
+# Define transformations - general is for valid and test and train is for training set
+general_transform = transforms.Compose([
     transforms.Resize(image_size),  # Resize the images to a consistent size
     transforms.ToTensor(),  # Convert images to PyTorch tensors
     transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))  # Normalize the images to have a mean and std between 0, 1
 ])
 
 # create the dataset and complete preprocessing steps
-full_dataset = datasets.ImageFolder(root=data_dir, transform=transform)
+full_dataset = datasets.ImageFolder(root=data_dir, transform=None)
 
 #%%
 # Split the dataset into train, test, validation
@@ -35,21 +36,90 @@ num_test = num_data - num_train - num_val
 
 train_dataset, val_dataset, test_dataset = random_split(full_dataset, [num_train, num_val, num_test])
 
+#%%
+#augment training 
+aug_transform = transforms.Compose([
+    transforms.Resize(image_size),  # Resize the images to a consistent size
+    transforms.RandomHorizontalFlip(p=0.5),
+    transforms.ToTensor(),  # Convert images to PyTorch tensors
+    transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))  # Normalize the images to have a mean and std between 0, 1
+])
+
+'''
+class AugmentedDataset(Dataset):
+    def __init__(self, original_dataset, transform=None):
+        self.original_dataset = original_dataset
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.original_dataset)
+
+    def __getitem__(self, idx):
+        img = self.original_dataset[idx][0]
+        label = self.original_dataset[idx][1]
+
+        if self.transform:
+            img = self.transform(img)
+            return img, label
+        else:
+            return None
+
+# Create an augmented dataset class
+augmented_train_dataset = AugmentedDataset(train_dataset, transform=aug_transform)
+'''
+#%%
+
+# Lists to store augmented data
+augmented_images = []
+augmented_labels = []
+
+# Perform augmentation on the training dataset
+for img, label in train_dataset:
+    augmented_img = aug_transform(img)
+
+    original_img_tensor = transforms.ToTensor()(img)
+    # Compare original and augmented images
+    if not torch.equal(original_img_tensor, augmented_img):
+            augmented_images.append(augmented_img)
+            augmented_labels.append(label)
+
+# Create TensorDataset from augmented data
+final_augmented_dataset = TensorDataset(torch.stack(augmented_images), torch.tensor(augmented_labels))
+
+#%%
+#apply the transformations to each split
+train_dataset.dataset.transform = general_transform
+val_dataset.dataset.transform = general_transform
+test_dataset.dataset.transform = general_transform
+
+#%%
+# Assuming train_dataset contains your original train dataset
+imgs = []
+labels = []
+for data in train_dataset:
+    imgs.append(data[0])
+    labels.append(data[1])
+
+# Concatenate datasets
+final_train_dataset = ConcatDataset([
+    final_augmented_dataset, 
+    TensorDataset(torch.stack(imgs), torch.tensor(labels))
+])
+
+#%%
 # Create DataLoaders for train, validation, test
 batch_size = 32
 
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+train_loader = DataLoader(final_train_dataset, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=batch_size)
 test_loader = DataLoader(test_dataset, batch_size=batch_size)
 
 #%%
+#getting the class weights after data augmentation
 y = []
-count = 0
-for i in os.listdir(data_dir):
-    folder_len = len(os.listdir(f"{data_dir}/{i}"))
-    folder_vals = [count] * folder_len
-    count += 1
-    y.extend(folder_vals)
+for image_batch, label_batch in train_loader:
+    for i in label_batch:
+        y.append(int(i))
 
 class_weights = compute_class_weight('balanced', classes=np.unique(y), y=y)
 
@@ -71,12 +141,6 @@ class CNN(nn.Module):
         self.fc2 = nn.Linear(2048, 512)
         self.dropout = nn.Dropout(0.5)
         self.fc3 = nn.Linear(512, 4)  # Output layer for 4 classes
-
-
-        #self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
-        #self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-        #self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
-        #self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2)
 
     def forward(self, x):
         x = self.pool1(nn.functional.relu(self.conv1(x)))
