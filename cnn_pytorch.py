@@ -56,7 +56,7 @@ class_weights = compute_class_weight('balanced', classes=np.unique(y), y=y)
 class_weight = torch.tensor(class_weights, dtype=torch.float32)
 
 # %%
-num_epochs = 50
+num_epochs = 100
 learning_rate = 0.001
 
 # CNN model definition
@@ -65,9 +65,12 @@ class CNN(nn.Module):
         super(CNN, self).__init__()
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, padding=1)
         self.pool1 = nn.MaxPool2d(kernel_size=2)
-        self.fc1 = nn.Linear(32 * 128 * 128, 2048)
-        self.dropout = nn.Dropout(0.2)
-        self.fc2 = nn.Linear(2048, 4)  # Output layer for 4 classes
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
+        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.fc1 = nn.Linear(64 * 64 * 64, 2048)
+        self.fc2 = nn.Linear(2048, 512)
+        self.dropout = nn.Dropout(0.5)
+        self.fc3 = nn.Linear(512, 4)  # Output layer for 4 classes
 
 
         #self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
@@ -77,10 +80,12 @@ class CNN(nn.Module):
 
     def forward(self, x):
         x = self.pool1(nn.functional.relu(self.conv1(x)))
-        x = x.view(-1, 32 * 128 * 128)
+        x = self.pool2(nn.functional.relu(self.conv2(x)))
+        x = x.view(-1, 64 * 64 * 64)
         x = nn.functional.relu(self.fc1(x))
+        x = nn.functional.relu(self.fc2(x))
         x = self.dropout(x)
-        x = self.fc2(x)
+        x = self.fc3(x)
         return x
 
 # Initialize model, loss function, and optimizer
@@ -91,10 +96,13 @@ optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
 # Initialize variables for early stopping
 best_val_loss = float('inf')
-patience = 3  # Number of epochs to wait for improvement
+patience = 10  # Number of epochs to wait for improvement
 counter = 0  # Counter to track epochs since the last improvement
 
 #%%
+train_acc = []
+val_acc = []
+
 # Training loop
 for epoch in range(num_epochs):
     model.train()
@@ -118,6 +126,7 @@ for epoch in range(num_epochs):
 
     # Calculate train accuracy
     train_accuracy = 100 * correct_train / total_train
+    train_acc.append(train_accuracy)
 
     # Validation accuracy and loss
     model.eval()
@@ -138,6 +147,7 @@ for epoch in range(num_epochs):
 
     # Calculate validation accuracy
     val_accuracy = 100 * correct_val / total_val
+    val_acc.append(val_accuracy)
 
     # Calculate average validation loss
     avg_val_loss = val_loss / len(val_loader)
@@ -161,4 +171,77 @@ for epoch in range(num_epochs):
           f'Validation Accuracy: {val_accuracy:.2f}%')
 
 print('Finished Training')
+
+# %%
+# Assuming new_data_loader contains your DataLoader instance for new data
+model.eval()  # Set the model to evaluation mode
+all_predictions = []
+with torch.no_grad():
+    for images, labels in test_loader:
+        # Assuming 'images' is the input format expected by the model
+        outputs = model(images)
+        # Assuming it's a classification task, get the predicted class (index)
+        _, predicted = torch.max(outputs, 1)
+        # Collect predictions
+        all_predictions.extend(predicted.cpu().numpy())
+# 'all_predictions' contains the predicted class labels for the new data
+print(all_predictions)
+
+# %%
+correct_val = 0
+total_val = 0
+val_loss = 0.0
+all_predictions = []
+all_y_true = []
+
+with torch.no_grad():
+    for images, labels in val_loader:
+        images, labels = images.to(device), labels.to(device)
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+        val_loss += loss.item()
+
+        _, predicted = torch.max(outputs.data, 1)
+        all_predictions.extend(predicted.cpu().numpy())
+        all_y_true.extend(labels.cpu().numpy())
+        total_val += labels.size(0)
+        correct_val += (predicted == labels).sum().item()
+
+# Calculate validation accuracy
+val_accuracy = 100 * correct_val / total_val
+
+# %%
+from sklearn.metrics import confusion_matrix
+
+cm = confusion_matrix(all_y_true, all_predictions)
+print('Validation CM:')
+print(cm)
+
+# %%
+correct_val = 0
+total_val = 0
+val_loss = 0.0
+all_predictions = []
+all_y_true = []
+
+with torch.no_grad():
+    for images, labels in train_loader:
+        images, labels = images.to(device), labels.to(device)
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+        val_loss += loss.item()
+
+        _, predicted = torch.max(outputs.data, 1)
+        all_predictions.extend(predicted.cpu().numpy())
+        all_y_true.extend(labels.cpu().numpy())
+        total_val += labels.size(0)
+        correct_val += (predicted == labels).sum().item()
+
+# Calculate validation accuracy
+val_accuracy = 100 * correct_val / total_val
+
+cm = confusion_matrix(all_y_true, all_predictions)
+print('Train CM:')
+print(cm)
+
 # %%
