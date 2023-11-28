@@ -115,11 +115,43 @@ model_tracker[key] = []
 model_tracker[key].append(model_summary)
 model_tracker[key].append(results.history)
 
-model.save('./model_objects/model_13.keras')
+# model.save('./model_objects/model_13.keras')
 # model = load_model(f'./model_objects/model_{key}.keras')
 
 with open('model_tracker.pickle', 'wb') as handle:
     pickle.dump(model_tracker, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+#%%
+import pandas as pd
+import numpy as np
+import tensorflow_datasets as tfds
+
+# Define the dataset to get predictions and observed values for
+dataset = new_train_ds
+
+class_headers = ['0', '1', '2', '3']
+preds = model.predict(dataset)
+y_pred = pd.DataFrame(preds, columns=class_headers)
+
+y_true = pd.DataFrame(columns=class_headers)
+for x, y in dataset:
+    labels = tfds.as_numpy(y)
+    labels = pd.DataFrame(labels, columns=class_headers)
+    y_true = pd.concat([y_true, labels])
+y_true.reset_index(drop=True, inplace=True)
+
+def get_pred_class_label(row):
+    """gets predicted class labels from predicted probabilities.
+    Input arg 'y_pred' is a dataframe with 4 columns containing probabilities.
+    """
+    index = np.argmax(row)
+    new_row = [0] * len(row)
+    new_row[index] = 1
+    return new_row
+
+y_pred_class = y_pred.apply(get_pred_class_label, axis=1, result_type="expand")
+y_true_class = y_true.apply(get_pred_class_label, axis=1, result_type="expand")
+
 
 #%%
 plt.plot(results.history['loss'], label='train loss')

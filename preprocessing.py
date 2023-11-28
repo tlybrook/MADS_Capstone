@@ -28,6 +28,7 @@ def split_data(data_dir, batch_size = 32):
         label_mode='categorical',
         color_mode="grayscale",
         subset="validation",
+        shuffle=False,
         seed=42,
         batch_size=batch_size,
         image_size=image_resize)
