@@ -1,4 +1,5 @@
 #%%
+import logging
 import torch
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, random_split, Dataset, TensorDataset
@@ -8,6 +9,13 @@ import numpy as np
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data.dataset import ConcatDataset
+from utils import (
+    get_model_tracker,
+    get_key
+)
+
+from logger_settings import *
+logger = logging.getLogger(__name__)
 
 #%%
 data_dir = './final_dataset'  
@@ -16,8 +24,9 @@ image_size = (256, 256)
 # Define transformations - general is for valid and test and train is for training set
 general_transform = transforms.Compose([
     transforms.Resize(image_size),  # Resize the images to a consistent size
+    transforms.Grayscale(num_output_channels=1),
     transforms.ToTensor(),  # Convert images to PyTorch tensors
-    transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))  # Normalize the images to have a mean and std between 0, 1
+    transforms.Normalize(mean=(0.5), std=(0.5))  # Normalize the images to have a mean and std between 0, 1
 ])
 
 # create the dataset and complete preprocessing steps
@@ -40,35 +49,15 @@ train_dataset, val_dataset, test_dataset = random_split(full_dataset, [num_train
 #augment training 
 aug_transform = transforms.Compose([
     transforms.Resize(image_size),  # Resize the images to a consistent size
+    transforms.Grayscale(num_output_channels=1),
     transforms.RandomHorizontalFlip(p=0.5),
+    transforms.RandomRotation(degrees=(30, 270)),
     transforms.ToTensor(),  # Convert images to PyTorch tensors
-    transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))  # Normalize the images to have a mean and std between 0, 1
+    transforms.Normalize(mean=(0.5), std=(0.5))  # Normalize the images to have a mean and std between 0, 1
 ])
 
-'''
-class AugmentedDataset(Dataset):
-    def __init__(self, original_dataset, transform=None):
-        self.original_dataset = original_dataset
-        self.transform = transform
 
-    def __len__(self):
-        return len(self.original_dataset)
-
-    def __getitem__(self, idx):
-        img = self.original_dataset[idx][0]
-        label = self.original_dataset[idx][1]
-
-        if self.transform:
-            img = self.transform(img)
-            return img, label
-        else:
-            return None
-
-# Create an augmented dataset class
-augmented_train_dataset = AugmentedDataset(train_dataset, transform=aug_transform)
-'''
 #%%
-
 # Lists to store augmented data
 augmented_images = []
 augmented_labels = []
@@ -125,21 +114,24 @@ class_weights = compute_class_weight('balanced', classes=np.unique(y), y=y)
 
 class_weight = torch.tensor(class_weights, dtype=torch.float32)
 
+#%% Get model Tracker
+model_tracker = get_model_tracker(file='pytorch_model_tracker.pickle', folder_path=None)
+
 # %%
 num_epochs = 100
-learning_rate = 0.001
+learning_rate = 0.0001
 
 # CNN model definition
 class CNN(nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, padding=1)
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, padding=1)
         self.pool1 = nn.MaxPool2d(kernel_size=2)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
         self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.fc1 = nn.Linear(64 * 64 * 64, 2048)
         self.fc2 = nn.Linear(2048, 512)
-        self.dropout = nn.Dropout(0.5)
+        self.dropout = nn.Dropout(0.3)
         self.fc3 = nn.Linear(512, 4)  # Output layer for 4 classes
 
     def forward(self, x):
@@ -160,7 +152,7 @@ optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
 # Initialize variables for early stopping
 best_val_loss = float('inf')
-patience = 10  # Number of epochs to wait for improvement
+patience = 5  # Number of epochs to wait for improvement
 counter = 0  # Counter to track epochs since the last improvement
 
 #%%
@@ -251,6 +243,17 @@ with torch.no_grad():
 # 'all_predictions' contains the predicted class labels for the new data
 print(all_predictions)
 
+
+#%% Get model tracking info saved in the tracker
+import pandas as pd
+import dill as pickle 
+
+key = get_key(model_output=model_tracker)
+results = pd.DataFrame(data={'train_acc': train_acc, 'val_acc': val_acc})
+model_tracker[key] = {}
+model_tracker[key]['epoch_acc_table'] = results
+
+
 # %%
 correct_val = 0
 total_val = 0
@@ -280,6 +283,7 @@ from sklearn.metrics import confusion_matrix
 cm = confusion_matrix(all_y_true, all_predictions)
 print('Validation CM:')
 print(cm)
+model_tracker[key]['val_cm'] = cm
 
 # %%
 correct_val = 0
@@ -307,5 +311,38 @@ val_accuracy = 100 * correct_val / total_val
 cm = confusion_matrix(all_y_true, all_predictions)
 print('Train CM:')
 print(cm)
+model_tracker[key]['train_cm'] = cm
+
+#%% Save the .pickle model tracker file
+with open('pytorch_model_tracker.pickle', 'wb') as handle:
+    pickle.dump(model_tracker, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 # %%
+import matplotlib.pyplot as plt
+
+# plt.plot(results.history['loss'], label='train loss')
+# plt.plot(results.history['val_loss'], label='val loss')
+# plt.ylabel('loss')
+# plt.xlabel('epoch')
+# plt.title('model Loss')
+# plt.legend()
+# plt.show()
+# plt.savefig('Val_loss')
+
+plt.plot(train_acc, label='train accuracy')
+plt.plot(val_acc, label='val accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.title('model accuracy')
+plt.legend()
+plt.show()
+plt.savefig('Val_acc')
+
+# plt.plot(results.history['recall'], label='train recall')
+# plt.plot(results.history['val_recall'], label='val recall')
+# plt.ylabel('recall')
+# plt.xlabel('epoch')
+# plt.title('model recall')
+# plt.legend()
+# plt.show()
+# plt.savefig('Val_recall')
