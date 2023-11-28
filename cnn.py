@@ -127,7 +127,7 @@ import numpy as np
 import tensorflow_datasets as tfds
 
 # Define the dataset to get predictions and observed values for
-dataset = new_train_ds
+dataset = val_ds
 
 class_headers = ['0', '1', '2', '3']
 preds = model.predict(dataset)
@@ -149,9 +149,24 @@ def get_pred_class_label(row):
     new_row[index] = 1
     return new_row
 
-y_pred_class = y_pred.apply(get_pred_class_label, axis=1, result_type="expand")
-y_true_class = y_true.apply(get_pred_class_label, axis=1, result_type="expand")
+def shrink_pred_matrix(row):
+    """Converts 4 column pred matrix into single column.
+    """
+    ret_val = np.argmax(row)
+    return ret_val
 
+y_pred_2 = y_pred.apply(get_pred_class_label, axis=1, result_type="expand")
+y_pred_class = y_pred_2.apply(shrink_pred_matrix, axis=1, result_type="expand")
+y_true_class = y_true.apply(shrink_pred_matrix, axis=1, result_type="expand")
+
+#%%
+from sklearn.metrics import confusion_matrix, accuracy_score
+
+cm = confusion_matrix(y_true_class, y_pred_class)
+print(cm)
+
+acc = accuracy_score(y_true_class, y_pred_class)
+print(acc)
 
 #%%
 plt.plot(results.history['loss'], label='train loss')
