@@ -1,6 +1,8 @@
 #%%
 import logging
 import torch
+from PIL import Image
+from sklearn.metrics import recall_score
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, random_split, Dataset, TensorDataset
 from sklearn.utils.class_weight import compute_class_weight
@@ -127,17 +129,17 @@ class CNN(nn.Module):
         super(CNN, self).__init__()
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, padding=1)
         self.pool1 = nn.MaxPool2d(kernel_size=2)
-        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
-        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.fc1 = nn.Linear(64 * 64 * 64, 2048)
-        self.fc2 = nn.Linear(2048, 512)
-        self.dropout = nn.Dropout(0.3)
+        # self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
+        # self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.fc1 = nn.Linear(128 * 128 * 32, 1024)
+        self.fc2 = nn.Linear(1024, 512)
+        self.dropout = nn.Dropout(0.2)
         self.fc3 = nn.Linear(512, 4)  # Output layer for 4 classes
 
     def forward(self, x):
         x = self.pool1(nn.functional.relu(self.conv1(x)))
-        x = self.pool2(nn.functional.relu(self.conv2(x)))
-        x = x.view(-1, 64 * 64 * 64)
+        # x = self.pool2(nn.functional.relu(self.conv2(x)))
+        x = x.view(-1, 128 * 128 * 32)
         x = nn.functional.relu(self.fc1(x))
         x = nn.functional.relu(self.fc2(x))
         x = self.dropout(x)
@@ -158,6 +160,10 @@ counter = 0  # Counter to track epochs since the last improvement
 #%%
 train_acc = []
 val_acc = []
+train_loss = []
+val_loss_list = []
+train_recall = []
+val_recall = []
 
 # Training loop
 for epoch in range(num_epochs):
@@ -165,6 +171,8 @@ for epoch in range(num_epochs):
     running_loss = 0.0
     correct_train = 0
     total_train = 0
+    epoch_y_preds = []
+    epoch_y_true = []
 
     for i, (images, labels) in enumerate(train_loader):
         images, labels = images.to(device), labels.to(device)
@@ -179,16 +187,27 @@ for epoch in range(num_epochs):
         _, predicted = torch.max(outputs.data, 1)
         total_train += labels.size(0)
         correct_train += (predicted == labels).sum().item()
+        epoch_y_preds.extend(predicted)
+        epoch_y_true.extend(labels)
+
+    # Calculate the recall
+    epoch_train_recall = recall_score(epoch_y_true, epoch_y_preds, average="micro")
+    train_recall.append(epoch_train_recall)
 
     # Calculate train accuracy
     train_accuracy = 100 * correct_train / total_train
     train_acc.append(train_accuracy)
+
+    #Save the loss values
+    train_loss.append(running_loss)
 
     # Validation accuracy and loss
     model.eval()
     correct_val = 0
     total_val = 0
     val_loss = 0.0
+    epoch_y_preds = []
+    epoch_y_true = []
 
     with torch.no_grad():
         for images, labels in val_loader:
@@ -200,10 +219,19 @@ for epoch in range(num_epochs):
             _, predicted = torch.max(outputs.data, 1)
             total_val += labels.size(0)
             correct_val += (predicted == labels).sum().item()
+            epoch_y_preds.extend(predicted)
+            epoch_y_true.extend(labels)
+
+    # Calculate the recall
+    epoch_val_recall = recall_score(epoch_y_true, epoch_y_preds, average="micro")
+    val_recall.append(epoch_val_recall)
 
     # Calculate validation accuracy
     val_accuracy = 100 * correct_val / total_val
     val_acc.append(val_accuracy)
+
+    # Save the loss into a list
+    val_loss_list.append(val_loss)
 
     # Calculate average validation loss
     avg_val_loss = val_loss / len(val_loader)
@@ -223,8 +251,10 @@ for epoch in range(num_epochs):
     print(f'Epoch [{epoch + 1}/{num_epochs}], '
           f'Training Loss: {running_loss / len(train_loader):.4f}, '
           f'Train Accuracy: {train_accuracy:.2f}%, '
+          f'Train Recall: {epoch_train_recall:.2f}%, '
           f'Validation Loss: {avg_val_loss:.4f}, '
-          f'Validation Accuracy: {val_accuracy:.2f}%')
+          f'Validation Accuracy: {val_accuracy:.2f}%'
+          f'Validation Recall: {epoch_val_recall:.2f}%, ')
 
 print('Finished Training')
 
@@ -249,7 +279,7 @@ import pandas as pd
 import dill as pickle 
 
 key = get_key(model_output=model_tracker)
-results = pd.DataFrame(data={'train_acc': train_acc, 'val_acc': val_acc})
+results = pd.DataFrame(data={'train_loss': train_loss, 'val_loss': val_loss, 'train_acc': train_acc, 'val_acc': val_acc, 'train_recall': train_recall, 'val_recall': val_recall})
 model_tracker[key] = {}
 model_tracker[key]['epoch_acc_table'] = results
 
@@ -313,9 +343,101 @@ print('Train CM:')
 print(cm)
 model_tracker[key]['train_cm'] = cm
 
+# %%
+correct_val = 0
+total_val = 0
+val_loss = 0.0
+all_predictions = []
+all_y_true = []
+
+with torch.no_grad():
+    for images, labels in test_loader:
+        images, labels = images.to(device), labels.to(device)
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+        val_loss += loss.item()
+
+        _, predicted = torch.max(outputs.data, 1)
+        all_predictions.extend(predicted.cpu().numpy())
+        all_y_true.extend(labels.cpu().numpy())
+        total_val += labels.size(0)
+        correct_val += (predicted == labels).sum().item()
+
+# Calculate validation accuracy
+val_accuracy = 100 * correct_val / total_val
+
+cm = confusion_matrix(all_y_true, all_predictions)
+print('Test CM:')
+print(cm)
+model_tracker[key]['test_cm'] = cm
+
+print(val_accuracy)
+
 #%% Save the .pickle model tracker file
 with open('pytorch_model_tracker.pickle', 'wb') as handle:
     pickle.dump(model_tracker, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+#%% Save the model
+# torch.save(model, 'model_pytorch_13.h5')
+# loaded_model = torch.load('model_pytorch_13.h5')
+
+#%% We copied from this link, cite in paper
+# https://ravivaishnav20.medium.com/visualizing-feature-maps-using-pytorch-12a48cd1e573
+model_weights =[]
+#we will save the 49 conv layers in this list
+conv_layers = []
+# get all the model children as list
+model_children = list(model.children())
+#counter to keep count of the conv layers
+counter = 0
+#append all the conv layers and their respective wights to the list
+for i in range(len(model_children)):
+    if type(model_children[i]) == nn.Conv2d:
+        counter+=1
+        model_weights.append(model_children[i].weight)
+        conv_layers.append(model_children[i])
+    elif type(model_children[i]) == nn.Sequential:
+        for j in range(len(model_children[i])):
+            for child in model_children[i][j].children():
+                if type(child) == nn.Conv2d:
+                    counter+=1
+                    model_weights.append(child.weight)
+                    conv_layers.append(child)
+print(f"Total convolution layers: {counter}")
+print("conv_layers")
+
+image = Image.open('./final_dataset/adenocarcinoma/file13.jpg')
+image = general_transform(image)
+image = image.to(device)
+
+outputs = []
+names = []
+for layer in conv_layers[0:]:
+    image = layer(image)
+    outputs.append(image)
+    names.append(str(layer))
+print(len(outputs))
+#print feature_maps
+for feature_map in outputs:
+    print(feature_map.shape)
+
+processed = []
+for feature_map in outputs:
+    feature_map = feature_map.squeeze(0)
+    gray_scale = torch.sum(feature_map,0)
+    gray_scale = gray_scale / feature_map.shape[0]
+    processed.append(gray_scale.data.cpu().numpy())
+for fm in processed:
+    print(fm.shape)
+
+fig = plt.figure(figsize=(30, 50))
+for i in range(len(processed)):
+    a = fig.add_subplot(5, 4, i+1)
+    imgplot = plt.imshow(processed[i])
+    a.axis("off")
+    a.set_title(names[i].split('(')[0], fontsize=30)
+# plt.savefig(str('feature_maps.jpg'), bbox_inches='tight')
+
 
 # %%
 import matplotlib.pyplot as plt
