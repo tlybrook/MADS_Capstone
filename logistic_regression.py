@@ -1,16 +1,14 @@
-#%%
+"""
+Functions with a main for logistic regression preprocessing, spliting, training and evaluation. 
+"""
 from PIL import Image, ImageOps
 import os
-import pandas as pd
-import matplotlib.pyplot  as plt
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import recall_score, accuracy_score
 from sklearn.model_selection import train_test_split
-import random
 
 root_folder = "./final_dataset"
-#%%
 # This function preprocesses the data to prepare for logistic regression train/test/valid split.
 # Here we resize image, convert to grayscale, convert to array, and normalize array values to be between 0 and 1. 
 def log_reg_preprocess(root_folder=root_folder):
@@ -37,17 +35,14 @@ def log_reg_preprocess(root_folder=root_folder):
 
 # Here we are splitting the data into train/test 70/30
 def split_data(imgs, values):
-    zipped = list(zip(imgs, values))
-    random.shuffle(zipped)
-    imgs, values = zip(*zipped)
-    
     # In the first step we will split the data in training and remaining dataset
-    X_train, X_test, y_train, y_test = train_test_split(imgs, values, train_size=0.7, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(imgs, values, train_size=0.7, random_state=42, shuffle=True)
 
     X_list = [X_train, X_test] 
     y_list = [y_train, y_test]
     final_list = []
 
+    # Getting the data into the right format for the Logistic Regression.
     for i in X_list:
         temp = np.array(i)
         temp_reshape = temp.reshape(temp.shape[0], -1)
@@ -59,7 +54,7 @@ def split_data(imgs, values):
     return final_list
 
 def logistic_reg(split_list):
-    #X_train, X_test, y_train, y_test
+    # Split list key: X_train, X_test, y_train, y_test
     clf = LogisticRegression(random_state=42, max_iter=1000, C=0.0005).fit(split_list[0], split_list[2])
     y_preds_test = clf.predict(split_list[1])
     y_preds_train = clf.predict(split_list[0])
@@ -67,20 +62,14 @@ def logistic_reg(split_list):
     acc_score_train = accuracy_score(split_list[2], y_preds_train)
     recall_test = recall_score(split_list[3], y_preds_test, average="macro")
     recall_train = recall_score(split_list[2], y_preds_train, average="macro")
+    
     print(f"Train Accuracy: {acc_score_train}\n\
     Test Accuracy: {acc_score_test}\n\
     Train Recall: {recall_train}\n\
     Test Recall: {recall_test}")
+    return
 
-    return (acc_score_test, recall_test)
-
-#%%
-imgs, values = log_reg_preprocess()
-split_list = split_data(imgs, values)
-print(logistic_reg(split_list))
-
-# %%
-# if __name__ == '__main__':
-#     imgs, values = log_reg_preprocess()
-#     split_list = split_data(imgs, values)
-#     print(logistic_reg(split_list))
+if __name__ == '__main__':
+     imgs, values = log_reg_preprocess()
+     split_list = split_data(imgs, values)
+     logistic_reg(split_list)
