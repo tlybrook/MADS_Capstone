@@ -6,6 +6,7 @@ from sklearn.metrics import confusion_matrix
 import torch.nn as nn
 from PIL import Image
 import torch
+import os
 
 # Folder where all visualizations will be stored.
 visualization_folder = './visualization_outputs'
@@ -20,6 +21,11 @@ def eval_curve(metric, train_vals, valid_vals, save_name):
     plt.xlabel(f"Epoch")
     plt.title(f"Model {metric}")
     plt.legend()
+
+    isExist = os.path.exists(visualization_folder)
+    if not isExist:
+        os.makedirs(visualization_folder)
+
     plt.savfig(f"{visualization_folder}/{save_name}.png")
     return 
 
@@ -74,6 +80,10 @@ def convolution_heatmap(model, transform, device, image_path, save_name):
         imgplot = plt.imshow(processed[i])
         a.axis("off")
         a.set_title(names[i].split('(')[0], fontsize=30)
+
+    isExist = os.path.exists(visualization_folder)
+    if not isExist:
+        os.makedirs(visualization_folder)
 
     plt.savefig(str(f"{visualization_folder}/{save_name}.jpg"), bbox_inches='tight')
     return
