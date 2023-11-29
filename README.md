@@ -13,4 +13,4 @@
 To replicate the logistic regression model, after you have the cleaned data and successfuly created final_dataset folder then you can just run the following command in terminal:
 python logistic_regression.py 
 
-This will print the train accuracy, test accuracy, train recall, and test recall. It will also save to the output_graphs folder the accuracy and recall graphs.
+This will print the train accuracy, test accuracy, train recall, and test recall.
