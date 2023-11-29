@@ -107,3 +107,17 @@ def convolution_heatmap(model, transform, device, image_path, save_name):
     plt.savefig(str(f"{visualization_folder}/{save_name}.png"), bbox_inches='tight')
     return
 
+# This plot is for determining image dimensions to resize when reading and cleaning the data.
+def image_dims_viz(image_dims, save_name):
+    plt.figure(figsize=(8, 8))
+    plt.scatter(image_dims.Width, image_dims.Height, color='blue', alpha=0.5, picker=True)
+    plt.title("Image Dimensions")
+    plt.xlabel("Width", size=14)
+    plt.ylabel("Height", size=14)
+
+    isExist = os.path.exists(visualization_folder)
+    if not isExist:
+        os.makedirs(visualization_folder)
+        
+    plt.savefig(str(f"{visualization_folder}/{save_name}.png"))
+    return

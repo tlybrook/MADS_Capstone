@@ -15,7 +15,7 @@ root_folder = "./final_dataset"
 def log_reg_preprocess(root_folder=root_folder):
     imgs = []
     labels = []
-    image_size = (256, 256)
+    image_size = (400, 300)
     dict_keys = {'adenocarcinoma': 0, 'large.cell.carcinoma': 1, 'normal': 2, 'squamous.cell.carcinoma': 3}
 
     folders = sorted(os.listdir(f"{root_folder}"))
