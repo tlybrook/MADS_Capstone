@@ -7,6 +7,7 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import recall_score, accuracy_score
 from sklearn.model_selection import train_test_split
+from visualization import (confusion_matrix_viz)
 
 root_folder = "./final_dataset"
 # This function preprocesses the data to prepare for logistic regression train/test/valid split.
@@ -67,9 +68,11 @@ def logistic_reg(split_list):
     Test Accuracy: {acc_score_test}\n\
     Train Recall: {recall_train}\n\
     Test Recall: {recall_test}")
-    return
+
+    return split_list[3], y_preds_test
 
 if __name__ == '__main__':
      imgs, values = log_reg_preprocess()
      split_list = split_data(imgs, values)
-     logistic_reg(split_list)
+     y_true, y_pred = logistic_reg(split_list)
+     confusion_matrix_viz(y_true, y_pred, "log_reg_cm", "Logistic Regression Test Confusion Matrix" )

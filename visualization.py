@@ -3,6 +3,8 @@ This file contains all visualization functions for our project.
 '''
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
+import seaborn as sn
+import pandas as pd
 import torch.nn as nn
 from PIL import Image
 import torch
@@ -29,8 +31,25 @@ def eval_curve(metric, train_vals, valid_vals, save_name):
     plt.savfig(f"{visualization_folder}/{save_name}.png")
     return 
 
-#Still need to add visualization for confusion matrix
-#cm = confusion_matrix(all_y_true, all_predictions)
+# This function creates a confusion matrix visualization for all the classes and 
+# saves it to the visualization output folder.
+def confusion_matrix_viz(y_true, y_pred, save_name, viz_title):
+    cm = confusion_matrix(y_true, y_pred)
+    label_key = ['adenocarcinoma', 'large.cell.carcinoma', 'normal', 'squamous.cell.carcinoma']
+    df_cm = pd.DataFrame(cm, index = [i for i in label_key],
+                         columns = [i for i in label_key])
+    plt.figure(figsize = (10,7))
+    sn.heatmap(df_cm, annot=True)
+    plt.title(viz_title)
+    plt.xlabel('Predicted labels')
+    plt.ylabel('True labels')
+
+    isExist = os.path.exists(visualization_folder)
+    if not isExist:
+        os.makedirs(visualization_folder)
+
+    plt.savefig(f"{visualization_folder}/{save_name}.png")
+    return
 
 # This function creates a heatmap for each convolution layer of the CNN to visualize the features.
 # The following code comes from https://ravivaishnav20.medium.com/visualizing-feature-maps-using-pytorch-12a48cd1e573
@@ -85,6 +104,6 @@ def convolution_heatmap(model, transform, device, image_path, save_name):
     if not isExist:
         os.makedirs(visualization_folder)
 
-    plt.savefig(str(f"{visualization_folder}/{save_name}.jpg"), bbox_inches='tight')
+    plt.savefig(str(f"{visualization_folder}/{save_name}.png"), bbox_inches='tight')
     return
 

@@ -9,8 +9,12 @@
 6. From here you can learn about us and our project, navigate to our GitHub, and upload your own Lung CT Scan and generate a prediction using our model.  
 
 ## Directions for replicating our work
-# Logsitic Regression
+### Logsitic Regression
 To replicate the logistic regression model, after you have the cleaned data and successfuly created final_dataset folder then you can just run the following command in terminal:
 python logistic_regression.py 
 
-This will print the train accuracy, test accuracy, train recall, and test recall.
+This will print the train accuracy, test accuracy, train recall, and test recall. It will also generate a confusion matrix visualization and output it to the visualization_outputs folder.
+
+## Other file information
+### Visualizations
+The visualizations.py contains functions for all the visualization for our project. This includes confusion matrix, line chart showing metrics over each CNN epoch, and a heatmap to show CNN convolution layer features.
