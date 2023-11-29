@@ -60,12 +60,19 @@ def split_data(imgs, values):
 
 def logistic_reg(split_list):
     #X_train, X_test, y_train, y_test
-    clf = LogisticRegression(random_state=42, max_iter=1000).fit(split_list[0], split_list[2])
-    y_preds = clf.predict(split_list[1])
-    acc_score = accuracy_score(split_list[3], y_preds)
-    recall = recall_score(split_list[3], y_preds, average="macro")
+    clf = LogisticRegression(random_state=42, max_iter=1000, C=0.0005).fit(split_list[0], split_list[2])
+    y_preds_test = clf.predict(split_list[1])
+    y_preds_train = clf.predict(split_list[0])
+    acc_score_test = accuracy_score(split_list[3], y_preds_test)
+    acc_score_train = accuracy_score(split_list[2], y_preds_train)
+    recall_test = recall_score(split_list[3], y_preds_test, average="macro")
+    recall_train = recall_score(split_list[2], y_preds_train, average="macro")
+    print(f"Train Accuracy: {acc_score_train}\n\
+    Test Accuracy: {acc_score_test}\n\
+    Train Recall: {recall_train}\n\
+    Test Recall: {recall_test}")
 
-    return (acc_score, recall)
+    return (acc_score_test, recall_test)
 
 #%%
 imgs, values = log_reg_preprocess()
@@ -73,7 +80,7 @@ split_list = split_data(imgs, values)
 print(logistic_reg(split_list))
 
 # %%
-if __name__ == '__main__':
-    imgs, values = log_reg_preprocess()
-    split_list = split_data(imgs, values)
-    print(logistic_reg(split_list))
+# if __name__ == '__main__':
+#     imgs, values = log_reg_preprocess()
+#     split_list = split_data(imgs, values)
+#     print(logistic_reg(split_list))
