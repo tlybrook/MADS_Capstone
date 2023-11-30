@@ -9,6 +9,11 @@
 6. From here you can learn about us and our project, navigate to our GitHub, and upload your own Lung CT Scan and generate a prediction using our model.  
 
 ## Directions for replicating our work
+### Data Reading and Cleaning
+First, download the data from kaggle: https://www.kaggle.com/datasets/mohamedhanyyy/chest-ctscan-images and move to root folder where you downloaded this repository. 
+
+Run python data_read.py in your terminal. This will read in the data, remove duplicates, and determine the average image dimensions that we use to resize each image to for consistency. 
+
 ### Logsitic Regression
 To replicate the logistic regression model, after you have the cleaned data and successfuly created final_dataset folder then you can just run the following command in terminal:
 python logistic_regression.py 
