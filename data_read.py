@@ -23,7 +23,7 @@ def data_clean(data_path, folder_labels):
 
     try:
         for i in folder_labels:
-            os.makedirs(f"./final_dataset2/{i}")
+            os.makedirs(f"./final_dataset/{i}")
             print("Folder %s created!" % i)
     except FileExistsError:
         print("Folder %s already exists" % i)
@@ -75,7 +75,7 @@ def data_clean(data_path, folder_labels):
 
     count = 0
     for key, info in final_non_doops.items():
-        shutil.copyfile(f"{data_path}/{info[3]}/{info[2]}/{info[4]}", f"./final_dataset2/{info[1]}/file{str(count)}.jpg")
+        shutil.copyfile(f"{data_path}/{info[3]}/{info[2]}/{info[4]}", f"./final_dataset/{info[1]}/file{str(count)}.jpg")
         count += 1
 
     print(f"{len(final_non_doops)} files added")
