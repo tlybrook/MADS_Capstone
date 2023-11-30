@@ -283,7 +283,6 @@ results = pd.DataFrame(data={'train_loss': train_loss, 'val_loss': val_loss, 'tr
 model_tracker[key] = {}
 model_tracker[key]['epoch_acc_table'] = results
 
-
 # %%
 correct_val = 0
 total_val = 0
@@ -412,10 +411,12 @@ image = image.to(device)
 
 outputs = []
 names = []
+count = 0
 for layer in conv_layers[0:]:
     image = layer(image)
     outputs.append(image)
-    names.append(str(layer))
+    count += 1
+    names.append(str(f"{layer} {count}"))
 print(len(outputs))
 #print feature_maps
 for feature_map in outputs:

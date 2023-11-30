@@ -81,10 +81,12 @@ def convolution_heatmap(model, transform, device, image_path, save_name):
 
     outputs = []
     names = []
+    count = 0
     for layer in conv_layers[0:]:
         image = layer(image)
         outputs.append(image)
-        names.append(str(layer))
+        count += 1
+        names.append(str(f"{layer} {count}"))
 
     processed = []
     for feature_map in outputs:
