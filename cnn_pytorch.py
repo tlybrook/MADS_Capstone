@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 #%%
 data_dir = './final_dataset'  
-image_size = (256, 256)
+image_size = (400, 300)
 
 # Define transformations - general is for valid and test and train is for training set
 general_transform = transforms.Compose([
@@ -128,18 +128,19 @@ class CNN(nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, padding=1)
+        self.batch_norm1 = nn.BatchNorm2d(32) 
+        #self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
         self.pool1 = nn.MaxPool2d(kernel_size=2)
-        # self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
-        # self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.fc1 = nn.Linear(128 * 128 * 32, 1024)
+        self.fc1 = nn.Linear(200 * 150 * 32, 1024)
         self.fc2 = nn.Linear(1024, 512)
         self.dropout = nn.Dropout(0.2)
         self.fc3 = nn.Linear(512, 4)  # Output layer for 4 classes
 
     def forward(self, x):
-        x = self.pool1(nn.functional.relu(self.conv1(x)))
-        # x = self.pool2(nn.functional.relu(self.conv2(x)))
-        x = x.view(-1, 128 * 128 * 32)
+        x = nn.functional.relu(self.batch_norm1(self.conv1(x)))
+        #x = nn.functional.relu(self.conv2(x))
+        x = self.pool1(x)
+        x = x.view(-1, 200 * 150 * 32)
         x = nn.functional.relu(self.fc1(x))
         x = nn.functional.relu(self.fc2(x))
         x = self.dropout(x)
