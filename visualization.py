@@ -28,7 +28,7 @@ def eval_curve(metric, train_vals, valid_vals, save_name):
     if not isExist:
         os.makedirs(visualization_folder)
 
-    plt.savfig(f"{visualization_folder}/{save_name}.png")
+    plt.savefig(f"{visualization_folder}/{save_name}.png")
     return 
 
 # This function creates a confusion matrix visualization for all the classes and 
@@ -40,9 +40,9 @@ def confusion_matrix_viz(y_true, y_pred, save_name, viz_title):
                          columns = [i for i in label_key])
     plt.figure(figsize = (10,7))
     sn.heatmap(df_cm, annot=True)
-    plt.title(viz_title)
-    plt.xlabel('Predicted labels')
-    plt.ylabel('True labels')
+    plt.title(viz_title, fontsize=16)
+    plt.xlabel('Predicted labels', fontsize=12)
+    plt.ylabel('True labels', fontsize=12)
 
     isExist = os.path.exists(visualization_folder)
     if not isExist:
@@ -98,7 +98,7 @@ def convolution_heatmap(model, transform, device, image_path, save_name):
         a = fig.add_subplot(5, 4, i+1)
         imgplot = plt.imshow(processed[i])
         a.axis("off")
-        a.set_title(names[i].split('(')[0], fontsize=30)
+        a.set_title(names[i].split('(')[0], fontsize=14)
 
     isExist = os.path.exists(visualization_folder)
     if not isExist:
@@ -111,13 +111,13 @@ def convolution_heatmap(model, transform, device, image_path, save_name):
 def image_dims_viz(image_dims, save_name):
     plt.figure(figsize=(8, 8))
     plt.scatter(image_dims.Width, image_dims.Height, color='blue', alpha=0.5, picker=True)
-    plt.title("Image Dimensions")
-    plt.xlabel("Width", size=14)
-    plt.ylabel("Height", size=14)
+    plt.title("Image Dimensions", fontsize=16)
+    plt.xlabel("Width", fontsize=12)
+    plt.ylabel("Height", fontsize=12)
 
     isExist = os.path.exists(visualization_folder)
     if not isExist:
         os.makedirs(visualization_folder)
-        
+
     plt.savefig(str(f"{visualization_folder}/{save_name}.png"))
     return

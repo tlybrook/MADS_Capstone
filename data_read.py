@@ -85,13 +85,11 @@ def determine_dim_resize(data_path, outcome_folders):
     image_dict = {}
     top_level_folders = sorted(os.listdir(data_path))
     for i in top_level_folders:
-        folders = sorted(os.listdir(f"{data_path}/{i}"))
-        for j in folders:
-            files = sorted(os.listdir(f"{data_path}/{i}/{j}"))
-            for file in files:
-                im = Image.open(f"{data_path}/{i}/{j}/{file}")
-                width, height = im.size
-                image_dict[str(file)] = (width, height)
+        files = sorted(os.listdir(f"{data_path}/{i}/"))
+        for file in files:
+            im = Image.open(f"{data_path}/{i}/{file}")
+            width, height = im.size
+            image_dict[str(file)] = (width, height)
 
     widths = [v[0] for v in image_dict.values()]
     heights = [v[1] for v in image_dict.values()]
@@ -107,7 +105,7 @@ def determine_dim_resize(data_path, outcome_folders):
 if __name__ == '__main__':
     data_path = "./Data"
     folder_labels = ["adenocarcinoma", 'large.cell.carcinoma', 'normal', 'squamous.cell.carcinoma']
-    determine_dim_resize(data_path, folder_labels)
+    determine_dim_resize('./final_dataset', folder_labels)
     data_clean(data_path, folder_labels)
 
 # %%
