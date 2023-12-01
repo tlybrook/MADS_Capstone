@@ -2,6 +2,7 @@
 import logging
 import torch
 from PIL import Image
+import matplotlib.pyplot as plt
 from sklearn.metrics import recall_score
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, random_split, Dataset, TensorDataset
@@ -14,6 +15,10 @@ from torch.utils.data.dataset import ConcatDataset
 from utils import (
     get_model_tracker,
     get_key
+)
+from visualization import (
+    convolution_heatmap,
+    confusion_matrix_viz,
 )
 
 from logger_settings import *
@@ -129,15 +134,17 @@ class CNN(nn.Module):
         super(CNN, self).__init__()
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, padding=1)
         self.batch_norm1 = nn.BatchNorm2d(32) 
-        #self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1)
+        self.batch_norm2 = nn.BatchNorm2d(32) 
         self.pool1 = nn.MaxPool2d(kernel_size=2)
         self.fc1 = nn.Linear(200 * 150 * 32, 1024)
         self.fc2 = nn.Linear(1024, 512)
-        self.dropout = nn.Dropout(0.2)
+        self.dropout = nn.Dropout(0.3)
         self.fc3 = nn.Linear(512, 4)  # Output layer for 4 classes
 
     def forward(self, x):
         x = nn.functional.relu(self.batch_norm1(self.conv1(x)))
+        x = nn.functional.relu(self.batch_norm2(self.conv2(x)))
         #x = nn.functional.relu(self.conv2(x))
         x = self.pool1(x)
         x = x.view(-1, 200 * 150 * 32)
@@ -460,7 +467,7 @@ plt.xlabel('epoch')
 plt.title('model accuracy')
 plt.legend()
 plt.show()
-plt.savefig('Val_acc')
+# plt.savefig('Val_acc')
 
 # plt.plot(results.history['recall'], label='train recall')
 # plt.plot(results.history['val_recall'], label='val recall')
