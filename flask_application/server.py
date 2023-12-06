@@ -11,28 +11,24 @@ import urllib.request
 import threading
 import requests
 import json
+from torchvision import transforms
+from PIL import Image
+import pickle
 
 app = Flask(__name__)
 upload_folder = os.path.join('static', 'uploads')
 app.config['UPLOAD_FOLDER'] = upload_folder
-model_path = './static/model_test2.h5'
+model_path = './static/model_pytorch_base_cnn.h5'
+pickled_model = pickle.load(open(model_path, 'rb'))
 
-loaded_model = load_model(model_path)
+image_size = (300, 400)
 
-def preprocess_image(image_path):
-    #This document helped with preproccessing steps below -> https://towardsdatascience.com/how-to-predict-an-image-with-keras-ca97d9cd4817
-    #resize & convert to gray scale
-    image_resize = (256, 256)
-    im = image.load_img(image_path, target_size=image_resize)
-    grayscaled = tf.image.rgb_to_grayscale(im)
-
-    #convert to array and save as a batch of one
-    img_array = image.img_to_array(grayscaled)
-    normalization_layer = tf.keras.layers.Rescaling(1./255)
-    img_normalized = normalization_layer(img_array)
-    processed_image = np.expand_dims(img_array, axis=0)
-
-    return processed_image
+general_transform = transforms.Compose([
+    transforms.Resize(image_size),  # Resize the images to a consistent size
+    transforms.Grayscale(num_output_channels=1),
+    transforms.ToTensor(),  # Convert images to PyTorch tensors
+    transforms.Normalize(mean=(0.5), std=(0.5))  # Normalize the images to have a mean and std between 0, 1
+])
 
 @app.route('/')
 def load_page():
@@ -52,8 +48,9 @@ def upload_file():
                 os.makedirs(upload_folder)
             filename = f"{app.config['UPLOAD_FOLDER']}/file1.jpg"
             file.save(filename)
-            processed_image = preprocess_image(filename)
-            prediction_result = loaded_model.predict(processed_image)
+            im = Image.open(filename)
+            processed_image = general_transform(im)
+            prediction_result = pickled_model.predict(processed_image)
 
             class_dict = {0: 'adenocarcinoma', 1: 'large cell carcinoma', 2: 'normal', 3: 'squamous cell carcinoma'}
             counter = 0
@@ -63,6 +60,7 @@ def upload_file():
                 if i > highest:
                     prediction = class_dict[counter]
                 counter += 1
+            print(prediction_result)
 
     return render_template('index.html', filename=filename, prediction=prediction)
 

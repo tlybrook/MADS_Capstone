@@ -11,13 +11,13 @@ import urllib.request
 import threading
 import requests
 
-model_path = './static/model_from_s3.keras'
+model_path = './static/model_pytorch_base_cnn.h5'
 
 def download_model():
     if os.path.exists(model_path):
         return
     else:
-        s3_public_url = "https://mads-flask-app.s3.us-east-2.amazonaws.com/model_test.keras" 
+        s3_public_url = "https://mads-flask-app.s3.us-east-2.amazonaws.com/model_pytorch_base_cnn.h5" 
         urllib.request.urlretrieve(s3_public_url, model_path)
         return
 
