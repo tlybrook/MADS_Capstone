@@ -8,6 +8,7 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, random_split, Dataset, TensorDataset
 from sklearn.utils.class_weight import compute_class_weight
 import os
+# import pickle
 import numpy as np
 import torch.nn as nn
 import torch.optim as optim
@@ -19,16 +20,16 @@ from utils import (
 from visualization import (
     convolution_heatmap,
     confusion_matrix_viz,
+    eval_curve
 )
 
 from logger_settings import *
 logger = logging.getLogger(__name__)
-SEED = 6913
-image_size = (400, 300)
-learning_rate = 0.0001
+SEED = 113
 
 #%%
 data_dir = './final_dataset'  
+image_size = (400, 300)
 torch.manual_seed(SEED)
 
 # Define transformations - general is for valid and test and train is for training set
@@ -129,29 +130,50 @@ model_tracker = get_model_tracker(file='pytorch_model_tracker.pickle', folder_pa
 
 # %%
 num_epochs = 100
+learning_rate = 0.0001
 
 # CNN model definition
 class CNN(nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, padding=1)
-        self.batch_norm1 = nn.BatchNorm2d(32) 
-        self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1)
-        self.batch_norm2 = nn.BatchNorm2d(32) 
+        # self.batch_norm1 = nn.BatchNorm2d(32) 
+        # self.batch_norm2 = nn.BatchNorm2d(32) 
         self.pool1 = nn.MaxPool2d(kernel_size=2)
-        self.fc1 = nn.Linear(200 * 150 * 32, 1024)
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1)
+        
+        self.conv3 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1)
+        self.conv4 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1)
+
+        # Adding 3 more layers to reduce size
+        # self.conv5 = nn.Conv2d(in_channels=16, out_channels=16, kernel_size=3, padding=1)
+        # self.conv6 = nn.Conv2d(in_channels=16, out_channels=8, kernel_size=3, padding=1)
+        # self.conv7 = nn.Conv2d(in_channels=8, out_channels=2, kernel_size=3, padding=1)
+        
+        self.pool2 = nn.MaxPool2d(kernel_size=2)
+
+        self.fc1 = nn.Linear(100 * 75 * 32, 1024)
         self.fc2 = nn.Linear(1024, 512)
         self.dropout = nn.Dropout(0.2)
         self.fc3 = nn.Linear(512, 4)  # Output layer for 4 classes
 
     def forward(self, x):
-        # x = nn.functional.relu(self.conv1(x))
-        # x = nn.functional.relu(self.conv2(x))
-        x = nn.functional.relu(self.batch_norm1(self.conv1(x)))
-        x = nn.functional.relu(self.batch_norm2(self.conv2(x)))
+        x = nn.functional.relu(self.conv1(x))
+        # x = nn.functional.relu(self.batch_norm1(self.conv1(x)))
+        # x = nn.functional.relu(self.batch_norm2(self.conv2(x)))
 
         x = self.pool1(x)
-        x = x.view(-1, 200 * 150 * 32)
+        x = nn.functional.relu(self.conv2(x))
+        x = nn.functional.relu(self.conv3(x))
+        x = nn.functional.relu(self.conv4(x))
+
+        # x = nn.functional.relu(self.conv5(x))
+        # x = nn.functional.relu(self.conv6(x))
+        # x = nn.functional.relu(self.conv7(x))
+
+        x = self.pool2(x)
+        # x = self.pool4(x)
+        x = x.view(-1, 100 * 75 * 32)
         x = nn.functional.relu(self.fc1(x))
         x = nn.functional.relu(self.fc2(x))
         x = self.dropout(x)
@@ -396,8 +418,22 @@ model_tracker[key]['SEED'] = SEED
 with open('pytorch_model_tracker.pickle', 'wb') as handle:
     pickle.dump(model_tracker, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+#%% Get conv heatmap
+convolution_heatmap(
+    model, 
+    general_transform, 
+    device, 
+    image_path='./final_dataset/adenocarcinoma/file13.jpg', 
+    save_name='feature_maps_12_6_mh'
+)
+
 #%% Save the model
-torch.save(model, 'model_pytorch_base_cnn.h5')
+# with open('model_pytorch_cnn_12_6.pickle', 'wb') as handle:
+#     pickle.dump(model, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+# with open('model_pytorch_cnn.pickle', 'rb') as handle:
+#     model = pickle.load(handle)
+# torch.save(model, 'model_pytorch_base_cnn.h5')
 # loaded_model = torch.load('model_pytorch_13.h5')
 
 #%% We copied from this link, cite in paper
@@ -469,7 +505,7 @@ plt.ylabel('loss')
 plt.xlabel('epoch')
 plt.title('model Loss')
 plt.legend()
-plt.savefig('final_model_loss.png')
+# plt.savefig('final_model_loss.png')
 plt.show()
 
 plt.plot(train_acc, label='train accuracy')
@@ -478,7 +514,7 @@ plt.ylabel('accuracy')
 plt.xlabel('epoch')
 plt.title('model accuracy')
 plt.legend()
-plt.savefig('final_model_acc.png')
+# plt.savefig('final_model_acc.png')
 plt.show()
 
 plt.plot(train_recall, label='train recall')
@@ -487,8 +523,17 @@ plt.ylabel('recall')
 plt.xlabel('epoch')
 plt.title('model recall')
 plt.legend()
-plt.savefig('final_model_recall.png')
+# plt.savefig('final_model_recall.png')
 plt.show()
 
+
+# %%
+# eval_curve('Accuracy', train_acc, val_acc, 'formatted_acc')
+
+# #%%
+# train_recall2 = [x * 100 for x in train_recall]
+# val_recall2 = [x * 100 for x in val_recall]
+
+# eval_curve('Recall', train_recall2, val_recall2, 'formatted_recall')
 
 # %%
