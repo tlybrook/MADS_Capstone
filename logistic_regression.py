@@ -8,6 +8,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import recall_score, accuracy_score
 from sklearn.model_selection import train_test_split
 from visualization import (confusion_matrix_viz)
+import joblib
 
 root_folder = "./final_dataset"
 # This function preprocesses the data to prepare for logistic regression train/test/valid split.
@@ -63,6 +64,9 @@ def logistic_reg(split_list):
     acc_score_train = accuracy_score(split_list[2], y_preds_train)
     recall_test = recall_score(split_list[3], y_preds_test, average="macro")
     recall_train = recall_score(split_list[2], y_preds_train, average="macro")
+
+    filename = 'model_logit_13.pkl'
+    joblib.dump(clf, filename)
     
     print(f"Train Accuracy: {acc_score_train}\n\
     Test Accuracy: {acc_score_test}\n\
