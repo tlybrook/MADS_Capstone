@@ -7,6 +7,7 @@ from PIL import Image
 import dill as pickle
 import torch
 import torch.nn as nn
+import uuid
 
 app = Flask(__name__)
 upload_folder = os.path.join('static', 'uploads')
@@ -45,10 +46,6 @@ class CNN(nn.Module):
         x = self.fc3(x)
         return x
 
-model_instance = CNN()
-with open(model_path, 'wb') as f:
-    pickle.dump(model_instance, f)
-
 image_size = (300, 400)
 general_transform = transforms.Compose([
     transforms.Resize(image_size),  # Resize the images to a consistent size
@@ -73,16 +70,24 @@ def upload_file():
             if not isExist:
                 # Create a new directory because it does not exist
                 os.makedirs(upload_folder)
-            filename = f"{app.config['UPLOAD_FOLDER']}/file1.jpg"
+            unique_filename = str(uuid.uuid4())
+
+            filename = f"{app.config['UPLOAD_FOLDER']}/{unique_filename}".replace('\\', '/')
             file.save(filename)
             im = Image.open(filename)
             processed_image = general_transform(im)
+
+            model_instance = CNN()
+            with open(model_path, 'wb') as f:
+                pickle.dump(model_instance, f)
+                
             with torch.no_grad():
                 outputs = model_instance(processed_image.unsqueeze(0))  # Ensure a batch dimension
                 _, predicted = torch.max(outputs.data, 1)
 
                 class_dict = {0: 'adenocarcinoma', 1: 'large cell carcinoma', 2: 'normal', 3: 'squamous cell carcinoma'}
                 prediction = class_dict[(predicted.cpu().numpy()[0])]
+                print(prediction)
             
     return render_template('index.html', filename=filename, prediction=prediction)
 
