@@ -1,4 +1,6 @@
-#%%
+'''
+This file cleans up the downloaded dataset from Kaggle and removes all duplicates.
+'''
 from PIL import Image, ImageOps
 import os
 import shutil
@@ -7,8 +9,7 @@ import matplotlib.pyplot  as plt
 import numpy as np
 from visualization import image_dims_viz
 
-#%%
-#This function is to take in the dataset from Kaggle, removes duplicates, and
+# This function is to take in the dataset from Kaggle, removes duplicates, and
 # moves them into new folders to be ready for data spliting and preprocessing.
 def data_clean(data_path, folder_labels):
 
@@ -81,6 +82,7 @@ def data_clean(data_path, folder_labels):
     print(f"{len(final_non_doops)} files added")
     return
 
+# This function generates a visualization for the dimensions of all the non-duplicated images.
 def determine_dim_resize(data_path, outcome_folders):
     image_dict = {}
     top_level_folders = sorted(os.listdir(data_path))
@@ -101,11 +103,9 @@ def determine_dim_resize(data_path, outcome_folders):
 
     return
 
-# %%
 if __name__ == '__main__':
     data_path = "./Data"
     folder_labels = ["adenocarcinoma", 'large.cell.carcinoma', 'normal', 'squamous.cell.carcinoma']
     determine_dim_resize('./final_dataset', folder_labels)
     data_clean(data_path, folder_labels)
 
-# %%
