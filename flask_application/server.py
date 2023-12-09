@@ -1,5 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, abort, send_from_directory
-from werkzeug.utils import secure_filename
+from flask import Flask, render_template, request
 import os
 import numpy as np
 from torchvision import transforms
@@ -62,13 +61,13 @@ def load_page():
 def upload_file():
     filename = None
     prediction = None
+    prob_string = None
 
     if request.method == 'POST':
         file = request.files['file']
         if file:
             isExist = os.path.exists(upload_folder)
             if not isExist:
-                # Create a new directory because it does not exist
                 os.makedirs(upload_folder)
             unique_filename = str(uuid.uuid4())
 
@@ -80,16 +79,21 @@ def upload_file():
             model_instance = CNN()
             with open(model_path, 'wb') as f:
                 pickle.dump(model_instance, f)
-                
+
             with torch.no_grad():
-                outputs = model_instance(processed_image.unsqueeze(0))  # Ensure a batch dimension
+                outputs = model_instance(processed_image)
                 _, predicted = torch.max(outputs.data, 1)
 
                 class_dict = {0: 'adenocarcinoma', 1: 'large cell carcinoma', 2: 'normal', 3: 'squamous cell carcinoma'}
                 prediction = class_dict[(predicted.cpu().numpy()[0])]
-                print(prediction)
-            
-    return render_template('index.html', filename=filename, prediction=prediction)
+                prob = nn.functional.softmax(outputs, dim=1)
+                prob_array = np.asarray(prob[0])
+                prob_string = f"The probabilities for the classes are adenocarcinoma: {str(np.round(prob_array[0]*100, 1))}%, \
+                                large cell carcinoma: {str(np.round(prob_array[1]*100, 1))}%, \
+                                normal: {str(np.round(prob_array[2]*100, 1))}%, \
+                                squamous cell carcinoma: {str(np.round(prob_array[3]*100, 1))}%"
+
+    return render_template('index.html', filename=filename, prediction=prediction, probabilities=prob_string)
 
 if __name__ == '__main__':
     app.run(debug=True, port=4000)

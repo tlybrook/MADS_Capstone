@@ -5,10 +5,10 @@ Also, to ensure you have all the right libraries please download the requirement
 ## Flask App Instructions
 1. Ensure you have run the requirements.txt file to download all necessary libraries in your virtual environment. 
 2. Change directory to the flask_application folder by running "cd flask_application"
-3. Then run the model_script.py file by entering "python model_script.py" in your terminal. This will download the CNN model from Amazon S3 (this file is fairly large so once you are done running the flask app you can delete this file from your local directory). Note: this step could take a few minutes.
-4. After this has successfully downloaded (you can verify by checking that there is a .h5 file in the flask_application/static folder) you can run the flask application by entering "flask run" in your terminal (be sure you are in the flask_application folder when you run this or it will not work).
-5. Click on the local host URL that shows up in your terminal and this will redirect you to the web where you can interact with our flask application.
-6. From here you can learn about us and our project, navigate to our GitHub, and upload your own Lung CT Scan and generate a prediction using our model.  
+3. Next, you can simply run "flask run" in terminal.
+4. After a few seconds, click on the local host URL that shows up in your terminal and this will redirect you to the web where you can interact with our flask application.
+5. From here you can learn about us and our project, navigate to our GitHub, and upload a Lung CT Scan and generate a prediction using our model. 
+Please note that this flask application is intended only for research purposes and should not be used for medical decision making. 
 
 ## Directions for replicating our work
 ### Data Reading and Cleaning
