@@ -19,11 +19,11 @@ We leverage pickle files in our project so please make sure you have Python vers
         pip uninstall python
         pip install python 3.10.11
 
-4. Next, let's create a virtual enviornment by running the following in terminal:
+5. Next, let's create a virtual enviornment by running the following in terminal:
 
-        python -m venv .venv
+        python -m venv venv
 
-5. Activate the virtual environment. 
+6. Activate the virtual environment. 
 
     In Windows terminal run:
 
@@ -33,7 +33,7 @@ We leverage pickle files in our project so please make sure you have Python vers
 
         source venv/bin/activate
 
-6. Next, download all the needed libraries in the virtual environment.
+7. Next, download all the needed libraries in the virtual environment.
 
         pip install -r requirements.txt
 
@@ -51,6 +51,7 @@ If you do not have pip installed please follow instructions here: https://pip.py
 
 4. After a few seconds, click on the local host URL that shows up in your terminal and this will redirect you to the web where you can interact with our flask application.
 5. From here you can learn about us and our project, navigate to our GitHub, and upload a Lung CT Scan and generate a prediction using our model. 
+
 Please note that this flask application is intended only for research purposes and should not be used for medical decision making. 
 
 ## Directions for replicating our work
