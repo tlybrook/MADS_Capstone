@@ -37,6 +37,8 @@ We leverage pickle files in our project so please make sure you have Python vers
 
         pip install -r requirements.txt
 
+If you do not have pip installed please follow instructions here: https://pip.pypa.io/en/stable/installation/
+
 ## Flask App Instructions
 1. Ensure you have run the requirements.txt file to download all necessary libraries in your virtual environment. 
 2. Change directory to the flask_application folder by running:
