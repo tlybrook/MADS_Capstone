@@ -55,6 +55,7 @@ def split_data(imgs, values):
 
     return final_list
 
+#This function defines the base logistic regression model.
 def logistic_reg(split_list):
     # Split list key: X_train, X_test, y_train, y_test
     clf = LogisticRegression(random_state=42, max_iter=1000, C=0.0005).fit(split_list[0], split_list[2])
@@ -64,9 +65,6 @@ def logistic_reg(split_list):
     acc_score_train = accuracy_score(split_list[2], y_preds_train)
     recall_test = recall_score(split_list[3], y_preds_test, average="macro")
     recall_train = recall_score(split_list[2], y_preds_train, average="macro")
-
-    filename = 'model_logit_13.pkl'
-    joblib.dump(clf, filename)
     
     print(f"Train Accuracy: {acc_score_train}\n\
     Test Accuracy: {acc_score_test}\n\

@@ -52,10 +52,11 @@ def confusion_matrix_viz(y_true, y_pred, save_name, viz_title):
     return
 
 # This function creates a heatmap for each convolution layer of the CNN to visualize the features.
-# The following code comes from https://ravivaishnav20.medium.com/visualizing-feature-maps-using-pytorch-12a48cd1e573
+# The following code comes from:
+# Vaishnav, Ravi. “Visualizing Feature Maps Using PyTorch.” Medium, 28 June 2021, 
+# ravivaishnav20.medium.com/visualizing-feature-maps-using-pytorch-12a48cd1e573. Accessed 29 Nov. 2023. 
 def convolution_heatmap(model, transform, device, image_path, save_name):
     model_weights =[]
-    #we will save the 49 conv layers in this list
     conv_layers = []
     # get all the model children as list
     model_children = list(model.children())
