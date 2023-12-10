@@ -7,7 +7,7 @@ import shutil
 import pandas as pd
 import matplotlib.pyplot  as plt
 import numpy as np
-from visualization import image_dims_viz
+from processes.visualization import image_dims_viz
 
 # This function is to take in the dataset from Kaggle, removes duplicates, and
 # moves them into new folders to be ready for data spliting and preprocessing.

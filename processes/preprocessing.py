@@ -15,6 +15,8 @@ from torch.utils.data import DataLoader, random_split, TensorDataset
 def split_data(data_dir, batch_size = 32):
     """Reads data from directory and formats
     into tensorflow dataset.
+    
+    THIS IS USED FOR KERAS ONLY!
     """
     image_resize = (256, 256)
 
@@ -48,11 +50,19 @@ def split_data(data_dir, batch_size = 32):
     return train_ds, val_ds, test_ds
 
 def normalize_data(ds):
+    """Normalizes Keras data.
+
+    THIS IS USED FOR KERAS ONLY!
+    """
     normalization_layer = tf.keras.layers.Rescaling(1./255)
     normalized_ds = ds.map(lambda x, y: (normalization_layer(x), y))
     return normalized_ds
 
 def data_augmentation(train_ds, rotation_val = 0.5, flip_orientation = None):
+    """Perform random flips and rotations on tensorflow dataset
+    
+    THIS IS USED FOR KERAS ONLY!
+    """
     flip_layer = tf.keras.layers.RandomFlip(flip_orientation, input_shape=(256, 256, 1), seed=42)
     rotation_layer = tf.keras.layers.RandomRotation(rotation_val, seed=42)
     aug_train_ds = train_ds.map(lambda x, y: (flip_layer(x), y))
@@ -70,6 +80,8 @@ def pytorch_split(data_dir, train_ratio, val_ratio):
     i.e. if train_ratio = 0.7 and val_ratio = 0.2 then test_ratio will be 0.1
 
     (1 - (0.7 + 0.3)) = 0.1
+
+    ** ONLY FOR PYTORCH, WONT WORK IN KERAS!
 
     Parameters
     -----------
@@ -92,6 +104,8 @@ def pytorch_split(data_dir, train_ratio, val_ratio):
 
 def get_data_loaders(train_dataset, val_dataset, test_dataset, aug_transform, general_transform, batch_size):
     """Gets the batched data loaders from the pytorhc datasets.
+
+    ** ONLY FOR PYTORCH, WONT WORK IN KERAS!
     """
     augmented_images = []
     augmented_labels = []
@@ -137,6 +151,8 @@ def get_data_loaders(train_dataset, val_dataset, test_dataset, aug_transform, ge
 
 def get_class_weights(data_loader):
     """Gets the class weights on training data.
+
+    ** ONLY FOR PYTORCH, WONT WORK IN KERAS!
     """
     y = []
     for image_batch, label_batch in data_loader:

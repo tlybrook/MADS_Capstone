@@ -17,16 +17,16 @@ import numpy as np
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data.dataset import ConcatDataset
-from utils import (
+from processes.utils import (
     get_model_tracker,
     get_key
 )
-from visualization import (
+from processes.visualization import (
     convolution_heatmap,
     confusion_matrix_viz,
     eval_curve
 )
-from model_processes import (
+from processes.model_designs_pytorch import (
      CNN,
      model_loop,
      VGG16CNN,
@@ -34,7 +34,7 @@ from model_processes import (
 )
 
 # Get global logger
-from logger_settings import *
+from logs.logger_settings import *
 logger = logging.getLogger(__name__)
 
 # Other macro level variables

@@ -17,27 +17,27 @@ import numpy as np
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data.dataset import ConcatDataset
-from utils import (
+from processes.utils import (
     get_model_tracker,
     get_key
 )
-from preprocessing import (
+from processes.preprocessing import (
     pytorch_split,
     get_data_loaders,
     get_class_weights
 )
-from visualization import (
+from processes.visualization import (
     convolution_heatmap,
     eval_curve
 )
-from model_processes import (
+from processes.model_designs_pytorch import (
     CNN,
     model_loop,
     pytorch_cnn_predict
 )
 
 # Get global logger
-from logger_settings import *
+from logs.logger_settings import *
 logger = logging.getLogger(__name__)
 
 # Other macro level variables
@@ -151,9 +151,9 @@ key = get_key(model_output=model_tracker)
 model_tracker[key] = {}
 model_tracker[key]['epoch_acc_table'] = results
 model_tracker[key]['SEED'] = SEED
-model_tracker['train_cm'] = cm_train
-model_tracker['val_cm'] = cm_val
-model_tracker['test_cm'] = cm_test
+model_tracker[key]['train_cm'] = cm_train
+model_tracker[key]['val_cm'] = cm_val
+model_tracker[key]['test_cm'] = cm_test
 
 # Save the .pickle model tracker file
 with open('pytorch_model_tracker.pickle', 'wb') as handle:

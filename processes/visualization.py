@@ -17,6 +17,15 @@ visualization_folder = './visualization_outputs'
 # epoch for training and validation. The plot is then saved to the visualization folder.
 # The save name is the name of the file. 
 def eval_curve(metric, train_vals, valid_vals, save_name):
+    """Create a plot comparing training metrics vs recall metrics for each epoch of model training.
+
+    Parameters
+    ----------
+    metric: (str) name of the metric. Will be used for labelling the chart
+    train_vals: (list or np.array) values correspinding to the training metric
+    valid_vals: (list or np.array) values correpsoding to the validation metrics.
+    save_name: (str) name of the file where the chart will be saved. Do not include a suffix such as .png or .jpg. 
+    """
     plt.plot(train_vals, label=f"Train {metric}")
     plt.plot(valid_vals, label=f"Valid {metric}")
     plt.ylabel(f"{metric}")

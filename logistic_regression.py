@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import recall_score, accuracy_score
 from sklearn.model_selection import train_test_split
-from visualization import (confusion_matrix_viz)
+from processes.visualization import (confusion_matrix_viz)
 import joblib
 
 root_folder = "./final_dataset"

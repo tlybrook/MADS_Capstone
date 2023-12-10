@@ -1,5 +1,11 @@
 """
-Documentation file to store the code used to build prior model iterations
+Documentation file to store the code used to build prior model iterations.
+
+THIS FILE IS NOT MEANT TO BE RUN.
+
+We saved our initial model ideas here in this file and copied them over to a clean file to run.
+Once we started working in PyTorch we used a pickle file to manage the different
+model runs so we didn tneed to do this process anymore.
 """
 
 
@@ -232,6 +238,7 @@ model.add(Dense(units=4, activation="softmax"))
 ##############################################
 ############## MODEL KEY = 13 ################
 ##############################################
-# Trying to recreate model 10 exactly
+# This model is the same as model 10
+# Doesnt count as an additional model in the grid search
 
 

@@ -136,6 +136,7 @@ class BatchNormCNN(nn.Module):
         x = self.fc3(x)
         return x
 
+
 class CNN(nn.Module):
     """
     Final CNN with batch norm included on each conv layer
@@ -291,10 +292,10 @@ def model_loop(model, train_loader, val_loader, device, optimizer, criterion, nu
 
     Parameters
     -----------
-    model: pytorch cnn using model_processes.CNN()
-    train_loader: train data (batched pytorch dataset)
-    val_loader: validation data (batched pytorch dataset)
-    device: pytorch device
+    model: PyTorch cnn using model_processes.CNN()
+    train_loader: train data (batched PyTorch dataset)
+    val_loader: validation data (batched PyTorch dataset)
+    device: PyTorch device
     optimizer: model optimizer (i.e. optim.Adam(model.parameters(), lr=learning_rate))
     criterion: model criteria (i.e. nn.CrossEntropyLoss(weight=class_weight))
     num_epochs: number of epochs to train for if early stopping doesn't trigger
@@ -414,8 +415,15 @@ def model_loop(model, train_loader, val_loader, device, optimizer, criterion, nu
 
 
 def pytorch_cnn_predict(model, data_loader, device, criterion):
-    """Gets predictions from pytorch model and accuracy score.
-    Returns tuples (predictions, accuracy)
+    """Gets predictions from PyTorch model and accuracy score.
+    Returns tuples (predictions, accuracy).
+
+    Parameters
+    ----------
+    model: PyTorch model that has already been trained
+    data_loader: PyTorch batched dataset to predict on
+    device: PyTorch device 
+    criterion: model criteria (i.e. nn.CrossEntropyLoss(weight=class_weight))
     """
     correct_val = 0
     total_val = 0
