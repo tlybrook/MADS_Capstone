@@ -39,21 +39,6 @@ We leverage pickle files in our project so please make sure you have Python vers
 
 If you do not have pip installed please follow instructions here: https://pip.pypa.io/en/stable/installation/
 
-## Flask App Instructions
-1. Ensure you have run the requirements.txt file to download all necessary libraries in your virtual environment. 
-2. Change directory to the flask_application folder by running:
-
-        cd flask_application
-
-3. Next, in terminal you can simply run: 
-
-        flask run
-
-4. After a few seconds, click on the local host URL that shows up in your terminal and this will redirect you to the web where you can interact with our flask application.
-5. From here you can learn about us and our project, navigate to our GitHub, and upload a Lung CT Scan and generate a prediction using our model. 
-
-Please note that this flask application is intended only for research purposes and should not be used for medical decision making. 
-
 ## Directions for replicating our work
 ### Data Reading and Cleaning
 First, download the data from kaggle: https://www.kaggle.com/datasets/mohamedhanyyy/chest-ctscan-images and move to root folder where you downloaded this repository. 
@@ -70,6 +55,21 @@ To replicate the logistic regression model, after you have the cleaned data and 
     python logistic_regression.py
 
 This will print the train accuracy, test accuracy, train recall, and test recall. It will also generate a confusion matrix visualization and output it to the visualization_outputs folder.
+
+## Flask App Instructions
+1. Ensure you have run the requirements.txt file to download all necessary libraries in your virtual environment. 
+2. Change directory to the flask_application folder by running:
+
+        cd flask_application
+
+3. Next, in terminal you can simply run: 
+
+        flask run
+
+4. After a few seconds, click on the local host URL that shows up in your terminal and this will redirect you to the web where you can interact with our flask application.
+5. From here you can learn about us and our project, navigate to our GitHub, and upload a Lung CT Scan and generate a prediction using our model. 
+
+Please note that this flask application is intended only for research purposes and should not be used for medical decision making. 
 
 ## Other file information
 ### Visualizations
