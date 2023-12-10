@@ -71,6 +71,13 @@ To replicate the logistic regression model, after you have the cleaned data and 
 
 This will print the train accuracy, test accuracy, train recall, and test recall. It will also generate a confusion matrix visualization and output it to the visualization_outputs folder.
 
+### Final CNN
+To recreate our final CNN, you can run the following command:
+
+    python final_pytorch_cnn.py
+
+Output from the model will print to the console including charts and metrics.
+
 ## Other file information
 ### Visualizations
 The visualizations.py contains functions for all the visualization for our project. This includes confusion matrix, line chart showing metrics over each CNN epoch, and a heatmap to show CNN convolution layer features.
