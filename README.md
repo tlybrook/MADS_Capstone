@@ -78,7 +78,21 @@ Output from the model will print to the console including charts and metrics.
 
 Please note that this flask application is intended only for research purposes and should not be used for medical decision making. 
 
-## Other file information
+## Files in Processes folder
+### visualizations.py
+The visualizations.py contains functions for all the visualization for our project. This includes confusion matrix, line chart showing metrics over each CNN epoch, and a heatmap to show CNN convolution layer features.
+
+### utils.py
+This file mainly contains the functions that help us build and manage our model tracking .pickle
+files. 
+
+### preprocessing.py
+This file contains the functions for preprocessing our data. It has the functions we used from both Keras and PyTorch.
+
+### model_designs_pytorch.py
+This file contains all of the model structures we tested in PyTorch. It also has the functions we used to train our models and predict using those models. 
+
+## Additional File Information
 ### pytorch_cnn_tuning
 This is the file we used to help tune our CNN. We import our candidate model structures
 and save the results of each model to a .pickle file so we can always compare any two models.
@@ -98,17 +112,3 @@ model_tracker file for this script but shortly after, we had a hard time reconci
 This file is not meant to be run. It just stores our 13 model designs that we wanted to test 
 in Keras. We found a better way to manage our model designs once we switched to PyTorch 
 but we still wanted to keep this in here as reference.
-
-## Files in Processes folder
-### visualizations.py
-The visualizations.py contains functions for all the visualization for our project. This includes confusion matrix, line chart showing metrics over each CNN epoch, and a heatmap to show CNN convolution layer features.
-
-### utils.py
-This file mainly contains the functions that help us build and manage our model tracking .pickle
-files. 
-
-### preprocessing.py
-This file contains the functions for preprocessing our data. It has the functions we used from both Keras and PyTorch.
-
-### model_designs_pytorch.py
-This file contains all of the model structures we tested in PyTorch. It also has the functions we used to train our models and predict using those models. 
