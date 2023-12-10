@@ -106,6 +106,7 @@ def determine_dim_resize(data_path, outcome_folders):
 if __name__ == '__main__':
     data_path = "./Data"
     folder_labels = ["adenocarcinoma", 'large.cell.carcinoma', 'normal', 'squamous.cell.carcinoma']
-    determine_dim_resize('./final_dataset', folder_labels)
     data_clean(data_path, folder_labels)
+    determine_dim_resize('./final_dataset', folder_labels)
+
 
