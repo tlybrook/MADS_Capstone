@@ -56,6 +56,13 @@ To replicate the logistic regression model, after you have the cleaned data and 
 
 This will print the train accuracy, test accuracy, train recall, and test recall. It will also generate a confusion matrix visualization and output it to the visualization_outputs folder.
 
+### Final CNN
+To recreate our final CNN, you can run the following command:
+
+    python final_pytorch_cnn.py
+
+Output from the model will print to the console including charts and metrics.
+
 ## Flask App Instructions
 1. Ensure you have run the requirements.txt file to download all necessary libraries in your virtual environment. 
 2. Change directory to the flask_application folder by running:
