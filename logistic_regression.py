@@ -11,9 +11,23 @@ from processes.visualization import (confusion_matrix_viz)
 import joblib
 
 root_folder = "./final_dataset"
-# This function preprocesses the data to prepare for logistic regression train/test/valid split.
-# Here we resize image, convert to grayscale, convert to array, and normalize array values to be between 0 and 1. 
+
 def log_reg_preprocess(root_folder=root_folder):
+    """Preprocess the data to prepare for logistic regression train/test split. 
+    All files passed in will be resized to the standard image size previously chosen in EDA, converted to 
+    grayscale, converted to an array, and then all pixels will be normalized to be between 0, 1.
+
+    ** ONLY FOR LOGISTIC REGRESSION! 
+
+    Parameters
+    -----------
+    root_folder: location of the directory containing all the images
+
+    Return
+    -----------
+    A tuple (imgs, labels) where imgs is a list of transformed image arrays and labels is the 
+    corresponding class labels.
+    """
     imgs = []
     labels = []
     image_size = (400, 300)
@@ -35,8 +49,23 @@ def log_reg_preprocess(root_folder=root_folder):
 
     return imgs, labels
 
-# Here we are splitting the data into train/test 70/30
 def split_data(imgs, values):
+    """Split a list transformed image arrays and the corresponding class labels into train and test set.
+    And converts train and test sets into the right format for Logistic Regression. 
+    The determined split is 70% train and 30% test. No validation set in this case as no hyperparameter
+    tuning happening. Logistic Regression is just a base model. 
+
+    ** ONLY FOR LOGISTIC REGRESSION!
+
+    Parameters
+    -----------
+    imgs: a list of transformed image arrays
+    values: a list of class labels (ints)
+
+    Return
+    -----------
+    A list containing the train and test sets in the following order: [X_train, X_test, y_train, y_test]
+    """
     # In the first step we will split the data in training and remaining dataset
     X_train, X_test, y_train, y_test = train_test_split(imgs, values, train_size=0.7, random_state=42, shuffle=True)
 
@@ -57,7 +86,16 @@ def split_data(imgs, values):
 
 #This function defines the base logistic regression model.
 def logistic_reg(split_list):
-    # Split list key: X_train, X_test, y_train, y_test
+    """Run a base logistic regression model on a split dataset.
+    
+    Parameters
+    -----------
+    split_list: A list containing the train and test sets in the following order: [X_train, X_test, y_train, y_test]
+
+    Return
+    -----------
+    Prints the train and test accuracy and recall and returns a tuple (the y_true and y_preds) for the test set.
+    """
     clf = LogisticRegression(random_state=42, max_iter=1000, C=0.0005).fit(split_list[0], split_list[2])
     y_preds_test = clf.predict(split_list[1])
     y_preds_train = clf.predict(split_list[0])

@@ -1,7 +1,6 @@
 """
-This file runs a VGG16 model from scratch using custom pytorch design
+This file runs a VGG16 model from scratch using custom pytorch design.
 """
-
 
 # Package imports
 import logging

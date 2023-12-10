@@ -221,10 +221,3 @@ convolution_heatmap(
 
 # Get the training acc chart
 eval_curve('Accuracy', train_acc, val_acc, 'formatted_acc')
-
-# Get the training recall chart - needs to be multiplied by 100 since recall scores comes straight from sklearn
-# train_recall2 = [x * 100 for x in train_recall]
-# val_recall2 = [x * 100 for x in val_recall]
-
-# eval_curve('Recall', train_recall2, val_recall2, 'formatted_recall')
-
