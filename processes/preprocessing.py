@@ -103,9 +103,20 @@ def pytorch_split(data_dir, train_ratio, val_ratio):
 
 
 def get_data_loaders(train_dataset, val_dataset, test_dataset, aug_transform, general_transform, batch_size):
-    """Gets the batched data loaders from the pytorhc datasets.
+    """Gets the batched data loaders from the PyTorch datasets.
 
     ** ONLY FOR PYTORCH, WONT WORK IN KERAS!
+
+    Parameters
+    -----------
+    train_dataset: the train PyTorch dataset
+    val_dataset: the validation PyTorch dataset
+    test_dataset: the test PyTorch dataset
+    aug_transform: (PyTorch torchvision transformation) a transformation containing the general transformations
+                    needed as well as any data augmentation. This is used for the training dataset.
+    general_transform: (PyTorch torchvision transformation) a general transformation (image resize, grayscale, normalization)
+                       of the image this is used for the test and validation datasets.
+    batch_size: (int) the size of each batch
     """
     augmented_images = []
     augmented_labels = []
@@ -153,6 +164,10 @@ def get_class_weights(data_loader):
     """Gets the class weights on training data.
 
     ** ONLY FOR PYTORCH, WONT WORK IN KERAS!
+
+    Parameters
+    -----------
+    data_loader: The PyTorch dataloader for the training dataset.
     """
     y = []
     for image_batch, label_batch in data_loader:

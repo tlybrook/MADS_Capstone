@@ -92,8 +92,7 @@ The structure of this file is nearly identical to final_pytorch_cnn.py
 
 ### cnn_keras.py
 This was the file we originally used to build our models in keras. We also created a 
-model_tracker file for this script but shortly after, we had a hard time reconciling the model results. We liked pytorch so we stopped using this file and Keras altogether but decided
-to keep the code in here as reference for researchers.
+model_tracker file for this script but shortly after, we had a hard time reconciling the model results. We tried PyTorch and got it working so we stopped using this file and Keras altogether but decided to keep the code in here as reference for researchers.
 
 ### _model_designs_keras.py
 This file is not meant to be run. It just stores our 13 model designs that we wanted to test 

@@ -1,7 +1,6 @@
 """
-Funcs for designing and fitting the model
+Functions for designing and fitting the model.
 """
-
 import torch
 import torch.nn as nn
 from sklearn.metrics import recall_score
@@ -34,8 +33,6 @@ class BaseCNN(nn.Module):
         x = self.dropout(x)
         x = self.fc3(x)
         return x
-
-
 class ExapndedCNN(nn.Module):
     """
     Expanded CNN containing two concolutional layers convolution layers
@@ -66,8 +63,7 @@ class ExapndedCNN(nn.Module):
         x = self.dropout(x)
         x = self.fc3(x)
         return x
-
-
+    
 class ExapndedCNN2(nn.Module):
     """
     Expanded CNN containing a single convolution layer followed by a single pooling layer.
@@ -102,8 +98,7 @@ class ExapndedCNN2(nn.Module):
         x = self.dropout(x)
         x = self.fc3(x)
         return x
-
-
+    
 class BatchNormCNN(nn.Module):
     """
     Expanded CNN with batch norm included on each conv layer
@@ -135,8 +130,7 @@ class BatchNormCNN(nn.Module):
         x = self.dropout(x)
         x = self.fc3(x)
         return x
-
-
+    
 class CNN(nn.Module):
     """
     Final CNN with batch norm included on each conv layer
@@ -175,7 +169,6 @@ class CNN(nn.Module):
         x = self.dropout(x)
         x = self.fc3(x)
         return x
-
 
 class FlaskCNN(nn.Module):
     """
@@ -221,7 +214,6 @@ class FlaskCNN(nn.Module):
         x = self.dropout(x)
         x = self.fc3(x)
         return x
-
 
 class VGG16CNN(nn.Module):
     def __init__(self):
@@ -284,7 +276,6 @@ class VGG16CNN(nn.Module):
         x = self.dropout(x)
         x = self.fc3(x)
         return x
-
 
 def model_loop(model, train_loader, val_loader, device, optimizer, criterion, num_epochs, patience):
     """
@@ -412,7 +403,6 @@ def model_loop(model, train_loader, val_loader, device, optimizer, criterion, nu
     }
 
     return model, results
-
 
 def pytorch_cnn_predict(model, data_loader, device, criterion):
     """Gets predictions from PyTorch model and accuracy score.
