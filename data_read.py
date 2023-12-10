@@ -9,9 +9,16 @@ import matplotlib.pyplot  as plt
 import numpy as np
 from processes.visualization import image_dims_viz
 
-# This function is to take in the dataset from Kaggle, removes duplicates, and
-# moves them into new folders to be ready for data spliting and preprocessing.
 def data_clean(data_path, folder_labels):
+    """Remove duplications from the downloaded Kaggle dataset and save the non-duplicate images to a new
+    folder to be ready for data splitting and preprocessing. Nothing is returned from this function, but the 
+    new directory should be created and accessible in your working directory. 
+    
+    Parameters
+    -----------
+    data_path: The path to the downloaded Kaggle dataset.
+    folder_labels: The labels of the folders for the new directory for non-duplicate images.
+    """
 
     doop1_path = f"{data_path}/train/large.cell.carcinoma_left.hilum_T2_N2_M0_llla/14.png"
     doop2_path = f"{data_path}/train/squamous.cell.carcinoma_left.hilum_T1_N2_M0_llla/sq2.png"
@@ -82,8 +89,14 @@ def data_clean(data_path, folder_labels):
     print(f"{len(final_non_doops)} files added")
     return
 
-# This function generates a visualization for the dimensions of all the non-duplicated images.
-def determine_dim_resize(data_path, outcome_folders):
+def determine_dim_resize(data_path='./final_dataset'):
+    """Save the dimensions of each image from the non-duplicated dataset and generate a scatterplot
+    visualization to determine optimal dimensions to resize images to.
+
+    Parameters
+    -----------
+    data_path: The path to the non-duplicated dataset (by default this is ./final_dataset)
+    """
     image_dict = {}
     top_level_folders = sorted(os.listdir(data_path))
     for i in top_level_folders:
@@ -107,6 +120,6 @@ if __name__ == '__main__':
     data_path = "./Data"
     folder_labels = ["adenocarcinoma", 'large.cell.carcinoma', 'normal', 'squamous.cell.carcinoma']
     data_clean(data_path, folder_labels)
-    determine_dim_resize('./final_dataset', folder_labels)
+    determine_dim_resize()
 
 

@@ -13,9 +13,6 @@ import os
 # Folder where all visualizations will be stored.
 visualization_folder = './visualization_outputs'
 
-# This function takes a metric like loss, accuracy, recall and creates a curve over each CNN 
-# epoch for training and validation. The plot is then saved to the visualization folder.
-# The save name is the name of the file. 
 def eval_curve(metric, train_vals, valid_vals, save_name):
     """Create a plot comparing training metrics vs recall metrics for each epoch of model training.
 
@@ -40,9 +37,16 @@ def eval_curve(metric, train_vals, valid_vals, save_name):
     plt.savefig(f"{visualization_folder}/{save_name}.png")
     return 
 
-# This function creates a confusion matrix visualization for all the classes and 
-# saves it to the visualization output folder.
 def confusion_matrix_viz(y_true, y_pred, save_name, viz_title):
+    """Generate a confusion matrix visualization for all 4 classes and save it to the output folder.
+
+    Parameters
+    ----------
+    y_true: (list or np.array) list of the true labels.
+    y_pred: (list or np.array) list of the predicted labels.
+    save_name: (str) name of the file where the chart will be saved. Do not include a suffix such as .png or .jpg. 
+    viz_title: (str) name of the visualiztion title.
+    """
     cm = confusion_matrix(y_true, y_pred)
     label_key = ['adenocarcinoma', 'large.cell.carcinoma', 'normal', 'squamous.cell.carcinoma']
     df_cm = pd.DataFrame(cm, index = [i for i in label_key],
@@ -60,11 +64,22 @@ def confusion_matrix_viz(y_true, y_pred, save_name, viz_title):
     plt.savefig(f"{visualization_folder}/{save_name}.png")
     return
 
-# This function creates a heatmap for each convolution layer of the CNN to visualize the features.
-# The following code comes from:
-# Vaishnav, Ravi. “Visualizing Feature Maps Using PyTorch.” Medium, 28 June 2021, 
-# ravivaishnav20.medium.com/visualizing-feature-maps-using-pytorch-12a48cd1e573. Accessed 29 Nov. 2023. 
 def convolution_heatmap(model, transform, device, image_path, save_name):
+    """Creates a feature map for each convolution layer of the CNN to visualize the features it is learning. 
+    The following code is copied from the following source:
+        Vaishnav, Ravi. “Visualizing Feature Maps Using PyTorch.” Medium, 28 June 2021, 
+            ravivaishnav20.medium.com/visualizing-feature-maps-using-pytorch-12a48cd1e573. Accessed 29 Nov. 2023.  
+    
+    Parameters 
+    ----------
+    model: The trained PyTorch model.
+    transform: (PyTorch torchvision transformation) a general transformation of the image that matches the CNN test/validation
+                transformations.
+    device: Specifies the hardware (CPU or GPU) where computations will be executed within the function. (Is created
+            when creating the CNN in PyTorch)
+    image_path: (str) the path to the image you want to generate the heatmap for.
+    save_name: (str) name of the file where the chart will be saved. Do not include a suffix such as .png or .jpg. 
+    """
     model_weights =[]
     conv_layers = []
     # get all the model children as list
@@ -119,8 +134,14 @@ def convolution_heatmap(model, transform, device, image_path, save_name):
     plt.savefig(str(f"{visualization_folder}/{save_name}.png"), bbox_inches='tight')
     return
 
-# This plot is for determining image dimensions to resize when reading and cleaning the data.
 def image_dims_viz(image_dims, save_name):
+    """Generates a scatterplot displaying all the image dimensions in the dataset.
+
+    Parameters
+    ----------
+    image_dims: (pandas dataframe) a dataframe with the following columns: 'FileName', 'Width', 'Height'.
+    save_name: (str) name of the file where the chart will be saved. Do not include a suffix such as .png or .jpg. 
+    """
     plt.figure(figsize=(6, 6))
     plt.scatter(image_dims.Width, image_dims.Height, color='blue', alpha=0.5, picker=True)
     plt.title("Image Dimensions", fontsize=18)
