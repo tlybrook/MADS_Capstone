@@ -1,5 +1,5 @@
 # MADS_Capstone
-We leverage pickle files in our project so please make sure you have Python version 3.10.11
+We are students at the University of Michigan Master of Applied Data Science Program. Our names are Tricia Lybrook, Matthew Harris, and Aaron Dalal. Our project should only be used for research purposes like benchmarking. Please feel free to reach out via GitHub if you have any questions about our project. Also, please note that we leverage pickle files in our project so please make sure you have Python version 3.10.11.
 
 ## Setup 
 1. Change the current working directory to the location where you want the cloned directory. 
