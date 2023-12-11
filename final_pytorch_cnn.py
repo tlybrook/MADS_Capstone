@@ -168,13 +168,7 @@ convolution_heatmap(
     save_name='feature_maps_final_model'
 )
 
-# Get the training acc chart
 # Reminder - The weighted Recall is the same as the accuracy for multiclass problems so 
 # we use the acc values but label it is as Recall.
 eval_curve('Recall', results['train_acc'], results['val_acc'], 'final_weighted_recall')
 
-# Get the training recall chart - needs to be multiplied by 100 since recall scores comes straight from sklearn
-# train_recall2 = [x * 100 for x in train_recall]
-# val_recall2 = [x * 100 for x in val_recall]
-
-# eval_curve('Recall', train_recall2, val_recall2, 'formatted_recall')
