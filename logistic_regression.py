@@ -84,7 +84,6 @@ def split_data(imgs, values):
 
     return final_list
 
-#This function defines the base logistic regression model.
 def logistic_reg(split_list):
     """Run a base logistic regression model on a split dataset.
     
