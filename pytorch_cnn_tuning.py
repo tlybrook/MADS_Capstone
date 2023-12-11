@@ -26,6 +26,12 @@ from processes.visualization import (
     convolution_heatmap,
     eval_curve
 )
+from processes.preprocessing import (
+    pytorch_split,
+    get_class_weights,
+    get_data_loaders
+
+)
 from processes.model_designs_pytorch import (
     CNN,
     BaseCNN,
@@ -45,6 +51,7 @@ logger = logging.getLogger(__name__)
 # Set the model to use for this run
 # One of the models imported from model_processes above
 MODEL = FlaskCNN()
+SAVE_MODEL = False
 
 # Other macro level variables
 SEED = 13
@@ -68,15 +75,7 @@ general_transform = transforms.Compose([
 ])
 
 # create the dataset and complete preprocessing steps
-full_dataset = datasets.ImageFolder(root=data_dir, transform=None)
-
-# Split the dataset into train, test, validation
-num_data = len(full_dataset)
-num_train = int(train_ratio * num_data)
-num_val = int(val_ratio * num_data)
-num_test = num_data - num_train - num_val
-
-train_dataset, val_dataset, test_dataset = random_split(full_dataset, [num_train, num_val, num_test])
+train_dataset, val_dataset, test_dataset = pytorch_split(data_dir=data_dir, train_ratio=train_ratio, val_ratio=val_ratio)
 
 #augment training 
 aug_transform = transforms.Compose([
@@ -88,55 +87,17 @@ aug_transform = transforms.Compose([
     transforms.Normalize(mean=(0.5), std=(0.5))  # Normalize the images to have a mean and std between 0, 1
 ])
 
-# Lists to store augmented data
-augmented_images = []
-augmented_labels = []
+train_loader, val_loader, test_loader = get_data_loaders(
+    train_dataset=train_dataset, 
+    val_dataset=val_dataset,
+    test_dataset=test_dataset,
+    aug_transform=aug_transform,
+    general_transform=general_transform,
+    batch_size=batch_size
+)
 
-# Perform augmentation on the training dataset
-for img, label in train_dataset:
-    augmented_img = aug_transform(img)
-
-    original_img_tensor = transforms.ToTensor()(img)
-    # Compare original and augmented images
-    if not torch.equal(original_img_tensor, augmented_img):
-            augmented_images.append(augmented_img)
-            augmented_labels.append(label)
-
-# Create TensorDataset from augmented data
-final_augmented_dataset = TensorDataset(torch.stack(augmented_images), torch.tensor(augmented_labels))
-
-#apply the transformations to each split
-train_dataset.dataset.transform = general_transform
-val_dataset.dataset.transform = general_transform
-test_dataset.dataset.transform = general_transform
-
-# Assuming train_dataset contains your original train dataset
-imgs = []
-labels = []
-for data in train_dataset:
-    imgs.append(data[0])
-    labels.append(data[1])
-
-# Concatenate datasets
-final_train_dataset = ConcatDataset([
-    final_augmented_dataset, 
-    TensorDataset(torch.stack(imgs), torch.tensor(labels))
-])
-
-# Create DataLoaders for train, validation, test
-train_loader = DataLoader(final_train_dataset, batch_size=batch_size, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=batch_size)
-test_loader = DataLoader(test_dataset, batch_size=batch_size)
-
-#getting the class weights after data augmentation
-y = []
-for image_batch, label_batch in train_loader:
-    for i in label_batch:
-        y.append(int(i))
-
-class_weights = compute_class_weight('balanced', classes=np.unique(y), y=y)
-
-class_weight = torch.tensor(class_weights, dtype=torch.float32)
+# Get class weights to deal with imbalanced classes
+class_weight = get_class_weights(data_loader=train_loader)
 
 # Get model Tracker
 model_tracker = get_model_tracker(file='pytorch_model_tracker.pickle', folder_path=None)
@@ -160,6 +121,10 @@ model, results = model_loop(
 
 # Get model summary
 torchsummary.summary(model, input_size=(1, 400, 300), batch_size=batch_size)
+
+# Logic to save model is specified
+if SAVE_MODEL:
+    torch.save(model, 'model_pytorch_base_cnn.h5')
 
 # Get predictions on test set
 test_predictions, test_y_true, test_acc = pytorch_cnn_predict(
@@ -198,7 +163,7 @@ train_recall = recall_score(train_y_true, train_predictions, average='weighted')
 print('Train Recall:', train_recall)
 
 # add the results to the model_tracker
-key = get_key(model_output=model_tracker)
+key = get_key(model_tracker=model_tracker)
 model_tracker[key] = {}
 model_tracker[key]['epoch_acc_table'] = results
 model_tracker[key]['SEED'] = SEED

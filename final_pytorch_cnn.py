@@ -147,7 +147,7 @@ train_recall = recall_score(train_y_true, train_predictions, average='weighted')
 print(train_recall)
 
 # add the results to the model_tracker
-key = get_key(model_output=model_tracker)
+key = get_key(model_tracker=model_tracker)
 model_tracker[key] = {}
 model_tracker[key]['epoch_acc_table'] = results
 model_tracker[key]['SEED'] = SEED
