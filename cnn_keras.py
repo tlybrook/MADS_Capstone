@@ -33,15 +33,15 @@ from keras.applications.resnet import preprocess_input
 from keras.src.metrics.confusion_metrics import activations
 # Use legacy Adam optimizer to avoid slow runtimes on Mac M1/M2 chips
 from keras.optimizers.legacy import Adam
-from processes.preprocessing import (
+from processes.keras_processes import (
     split_data,
     normalize_data,
+    get_model_summary,
+    get_steps_per_epoch,
     data_augmentation
 )
 from processes.utils import (
     get_model_tracker,
-    get_model_summary,
-    get_steps_per_epoch,
     get_key
 )
 from logs.logger_settings import *
