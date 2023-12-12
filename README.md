@@ -90,7 +90,7 @@ This file mainly contains the functions that help us build and manage our model 
 files. 
 
 ### preprocessing.py
-This file contains the functions for preprocessing our data. It has the functions we used from both Keras and PyTorch.
+This file contains the functions for preprocessing our data.
 
 ### model_designs_pytorch.py
 This file contains all of the model structures we tested in PyTorch. It also has the functions we used to train our models and predict using those models. 
@@ -107,11 +107,4 @@ that we tried and since it performs so much worse than the rest of our candidate
 we decided to keep the code for this model separate so it is more convenient to run this example.
 The structure of this file is nearly identical to final_pytorch_cnn.py
 
-### cnn_keras.py
-This was the file we originally used to build our models in keras. We also created a 
-model_tracker file for this script but shortly after, we had a hard time reconciling the model results. We tried PyTorch and got it working so we stopped using this file and Keras altogether but decided to keep the code in here as reference for researchers.
-
-### _model_designs_keras.py
-This file is not meant to be run. It just stores our 13 model designs that we wanted to test 
-in Keras. We found a better way to manage our model designs once we switched to PyTorch 
-but we still wanted to keep this in here as reference.
+** NOTE: We have left the Keras files in our repository for reference. We could not reconcile reported model metrics in Keras so we switched to PyTorch. If you want to run any Keras files, please install tensorflow separately as it is not included in the requirements.txt file. 
