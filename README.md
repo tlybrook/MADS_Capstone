@@ -10,6 +10,9 @@ We are students at the University of Michigan Master's of Applied Data Science P
     For additional help on cloning a repository please look here: https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository
 
 3. Open the cloned repository.
+
+        cd MADS_Capstone
+   
 4. Ensure the Python version you are using is 3.10.11. Run the following to check:
 
         python --version
